@@ -6,6 +6,8 @@ Flow Engine analyzes a codebase on your machine and turns it into a graph an AI 
 
 It is local-first by default. The CLI, MCP server, Docker image, read-only API, parsers, reports, and context exports work without network access, telemetry, accounts, or API keys.
 
+![Flow Engine dependency graph](docs/assets/flow-engine-graph.svg)
+
 [Documentation](docs/overview.md) · [CLI](docs/CLI_COMMANDS.md) · [MCP](docs/mcp.md) · [Docker](docs/docker.md) · [Configuration](docs/configuration.md) · [Public API](public-api.md) · [Roadmap](ROADMAP.md)
 
 ## Why Flow Engine
@@ -102,6 +104,8 @@ php bin/engine.php appmap --catalog=flow-services.json
 ## MCP Server
 
 Flow Engine can run as a local MCP server so AI clients can inspect your codebase through tools instead of relying on pasted context.
+
+![Flow Engine MCP calls in an agent client](docs/assets/flow-engine-terminal.svg)
 
 ```bash
 export FLOW_ENGINE_BIN="$PWD/bin/engine.php"

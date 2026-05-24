@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" role="img" aria-labelledby="title desc">
+  <title id="title">Flow Engine graph</title>
+  <desc id="desc">Grafo abstrato de dependencias de software.</desc>
+  <rect width="960" height="620" fill="#0f1113"/>
+  <g stroke="#263139" stroke-width="1">
+    <path d="M110 120h740M110 220h740M110 320h740M110 420h740M110 520h740"/>
+    <path d="M160 70v490M320 70v490M480 70v490M640 70v490M800 70v490"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-width="4">
+    <path d="M164 308C256 156 387 143 504 220S682 397 805 305" stroke="#64b6ac"/>
+    <path d="M164 308C270 417 362 438 473 380S654 226 805 305" stroke="#d6a84f"/>
+    <path d="M245 178C314 259 379 306 480 306S648 254 710 178" stroke="#e06c5f" opacity=".75"/>
+  </g>
+  <g font-family="monospace" font-size="18">
+    <g>
+      <circle cx="164" cy="308" r="32" fill="#181c20" stroke="#64b6ac" stroke-width="4"/>
+      <text x="164" y="315" fill="#f2efe8" text-anchor="middle">API</text>
+    </g>
+    <g>
+      <circle cx="245" cy="178" r="30" fill="#181c20" stroke="#d6a84f" stroke-width="4"/>
+      <text x="245" y="185" fill="#f2efe8" text-anchor="middle">CLI</text>
+    </g>
+    <g>
+      <circle cx="480" cy="306" r="46" fill="#181c20" stroke="#f2efe8" stroke-width="4"/>
+      <text x="480" y="313" fill="#f2efe8" text-anchor="middle">GRAPH</text>
+    </g>
+    <g>
+      <circle cx="710" cy="178" r="30" fill="#181c20" stroke="#e06c5f" stroke-width="4"/>
+      <text x="710" y="185" fill="#f2efe8" text-anchor="middle">CI</text>
+    </g>
+    <g>
+      <circle cx="805" cy="305" r="34" fill="#181c20" stroke="#64b6ac" stroke-width="4"/>
+      <text x="805" y="312" fill="#f2efe8" text-anchor="middle">MCP</text>
+    </g>
+  </g>
+  <g fill="#b7b0a3" font-family="monospace" font-size="16">
+    <text x="90" y="565">fan-in</text>
+    <text x="228" y="565">cycles</text>
+    <text x="390" y="565">violations</text>
+    <text x="585" y="565">blast radius</text>
+    <text x="780" y="565">llm context</text>
+  </g>
+</svg>
