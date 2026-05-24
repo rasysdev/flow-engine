@@ -318,14 +318,14 @@ final class FlowDiagramGeneratorTest extends TestCase
         ];
         // Virtual unresolved http_call edge (to does not map to a real node)
         $edges = [
-            new Edge('App\Service::call', 'http:GET:https://api.stripe.com/v1/charges', 'fetch', 'http_call'),
+            new Edge('App\Service::call', 'http:GET:https://payments.example.test/v1/charges', 'fetch', 'http_call'),
         ];
 
         $flow    = new Flow($nodes, $edges);
         $diagram = $this->generator->c4Context($flow, 'MyProject');
 
         $this->assertStringContainsString('System_Ext(', $diagram);
-        $this->assertStringContainsString('api.stripe.com', $diagram);
+        $this->assertStringContainsString('payments.example.test', $diagram);
     }
 
     public function test_c4context_skips_relative_url_http_calls(): void
@@ -380,14 +380,14 @@ final class FlowDiagramGeneratorTest extends TestCase
         ];
         // Two edges to the same host
         $edges = [
-            new Edge('App\Service::call', 'http:GET:https://api.stripe.com/charges', 'fetch', 'http_call'),
-            new Edge('App\Service::call', 'http:POST:https://api.stripe.com/refunds', 'fetch', 'http_call'),
+            new Edge('App\Service::call', 'http:GET:https://payments.example.test/charges', 'fetch', 'http_call'),
+            new Edge('App\Service::call', 'http:POST:https://payments.example.test/refunds', 'fetch', 'http_call'),
         ];
 
         $flow    = new Flow($nodes, $edges);
         $diagram = $this->generator->c4Context($flow, 'MyProject');
 
-        // api.stripe.com should appear only once as a System_Ext
-        $this->assertSame(1, substr_count($diagram, 'api.stripe.com'));
+        // payments.example.test should appear only once as a System_Ext
+        $this->assertSame(1, substr_count($diagram, 'payments.example.test'));
     }
 }

@@ -106,7 +106,7 @@ final class MermaidDiagramGeneratorC4Test extends TestCase
                 'type'        => 'http',
                 'fromService' => 'backend',
                 'toService'   => null,
-                'target'      => 'https://api.stripe.com/v1/charges',
+                'target'      => 'https://payments.example.test/v1/charges',
                 'fromNode'    => 'Backend::pay',
             ]],
         );
@@ -114,7 +114,7 @@ final class MermaidDiagramGeneratorC4Test extends TestCase
         $diagram = $this->generator->c4Container($appmap);
 
         $this->assertStringContainsString('System_Ext(', $diagram);
-        $this->assertStringContainsString('api.stripe.com', $diagram);
+        $this->assertStringContainsString('payments.example.test', $diagram);
         $this->assertStringContainsString('Rel(', $diagram);
     }
 
@@ -148,15 +148,15 @@ final class MermaidDiagramGeneratorC4Test extends TestCase
             ],
             integrationEdges: [
                 ['type' => 'http', 'fromService' => 'svc', 'toService' => null,
-                 'target' => 'https://api.stripe.com/charges', 'fromNode' => 'X::a'],
+                 'target' => 'https://payments.example.test/charges', 'fromNode' => 'X::a'],
                 ['type' => 'http', 'fromService' => 'svc', 'toService' => null,
-                 'target' => 'https://api.stripe.com/refunds', 'fromNode' => 'X::b'],
+                 'target' => 'https://payments.example.test/refunds', 'fromNode' => 'X::b'],
             ],
         );
 
         $diagram = $this->generator->c4Container($appmap);
 
-        $this->assertSame(1, substr_count($diagram, 'api.stripe.com'));
+        $this->assertSame(1, substr_count($diagram, 'payments.example.test'));
     }
 
     public function test_c4container_empty_appmap_produces_valid_output(): void
