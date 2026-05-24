@@ -1,14 +1,36 @@
-# Flow Engine
+<p align="center">
+  <img src="docs/assets/flow-engine-logo-text.svg" alt="Flow Engine" width="620">
+</p>
 
-Local dependency graph and factual context for AI-assisted software work.
+<p align="center">
+  <strong>Local dependency graph and factual context for AI-assisted software work.</strong>
+</p>
 
-Flow Engine analyzes a codebase on your machine and turns it into a graph an AI assistant can trust: files, symbols, dependencies, cycles, impact, risk, architecture violations, orphan code, bugs, snapshots, and compact context exports.
+<p align="center">
+  <a href="docs/overview.md">Documentation</a> ·
+  <a href="docs/CLI_COMMANDS.md">CLI</a> ·
+  <a href="docs/mcp.md">MCP</a> ·
+  <a href="docs/docker.md">Docker</a> ·
+  <a href="docs/configuration.md">Configuration</a> ·
+  <a href="public-api.md">Public API</a> ·
+  <a href="ROADMAP.md">Roadmap</a>
+</p>
+
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-64b6ac">
+  <img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4">
+  <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-d6a84f">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ed">
+  <img alt="Local first" src="https://img.shields.io/badge/local--first-no%20required%20API%20key-e06c5f">
+</p>
+
+<p align="center">
+  <img src="docs/assets/flow-engine-graph.svg" alt="Flow Engine dependency graph" width="860">
+</p>
+
+**Flow Engine** analyzes a codebase on your machine and turns it into a graph an AI assistant can trust: files, symbols, dependencies, cycles, impact, risk, architecture violations, orphan code, bugs, snapshots, and compact context exports.
 
 It is local-first by default. The CLI, MCP server, Docker image, read-only API, parsers, reports, and context exports work without network access, telemetry, accounts, or API keys.
-
-![Flow Engine dependency graph](docs/assets/flow-engine-graph.svg)
-
-[Documentation](docs/overview.md) · [CLI](docs/CLI_COMMANDS.md) · [MCP](docs/mcp.md) · [Docker](docs/docker.md) · [Configuration](docs/configuration.md) · [Public API](public-api.md) · [Roadmap](ROADMAP.md)
 
 ## Why Flow Engine
 
