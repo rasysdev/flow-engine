@@ -1,0 +1,16 @@
+services:
+  flow-engine-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flow-engine-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      FLOW_ENGINE_STATE_DIR: /state
+      FLOW_ENGINE_ENV: production
+    volumes:
+      - ./workspace:/workspace:ro
+      - ./state:/state
+    command: ["api", "/workspace", "--host=0.0.0.0", "--port=8080"]

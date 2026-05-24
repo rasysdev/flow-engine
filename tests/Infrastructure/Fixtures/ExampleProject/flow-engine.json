@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "context": {
+    "type": "php",
+    "autoload": "vendor/autoload.php"
+  },
+  "scan": {
+    "include": ["App/src"],
+    "exclude": ["vendor"],
+    "extensions": ["php"]
+  }
+}

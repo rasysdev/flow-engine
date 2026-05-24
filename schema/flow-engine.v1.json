@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-engine.dev/schema/flow-engine.v1.json",
+  "title": "Flow Engine Project Configuration (v1)",
+  "description": "Configuration file for Flow Engine projects",
+  "type": "object",
+  "required": [
+    "version",
+    "context",
+    "scan"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Flow Engine configuration version"
+    },
+    "context": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["composer", "wordpress", "custom", "flutter"],
+          "description": "Project context type"
+        },
+        "autoload": {
+          "type": ["string", "null"],
+          "description": "Path to autoload file, relative to project root"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Directories to include in scan"
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Directories to exclude from scan"
+        },
+        "extensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["php"],
+          "description": "File extensions to scan"
+        }
+      }
+    },
+    "flutter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "libRoot": {
+          "type": "string",
+          "description": "Flutter source root, relative to project root"
+        },
+        "testRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional Dart test roots"
+        },
+        "platformRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Platform roots used as structural context"
+        },
+        "backendRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Backend roots colocated with the Flutter app"
+        },
+        "entryFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicit Flutter entry files"
+        }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "layers": {
+          "type": "object",
+          "description": "Custom layer mapping: layer name -> array of namespace prefixes",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Entrypoint detection configuration",
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Custom class/method name patterns that must never be classified as orphans (e.g. 'Webhook', 'EventSubscriber')"
+        }
+      }
+    }
+  }
+}

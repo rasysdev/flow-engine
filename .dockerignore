@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+.idea
+.claude
+.flow-engine
+node_modules
+outputs
+reports
+tests
+vendor
+*.log
+*.tmp
+*.cache
+.phpunit.result.cache
+

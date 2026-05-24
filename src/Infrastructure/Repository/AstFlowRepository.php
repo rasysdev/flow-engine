@@ -1,0 +1,215 @@
+<?php
+
+namespace FlowEngine\Infrastructure\Repository;
+
+use FlowEngine\Application\DTO\SymbolDTO;
+use FlowEngine\Domain\Contracts\FlowRepository;
+use FlowEngine\Domain\Contracts\Flow as FlowContract;
+use FlowEngine\Domain\Flow\Flow;
+use FlowEngine\Domain\Flow\SymbolIndex;
+
+use FlowEngine\Domain\Contracts\ProjectContext;
+use FlowEngine\Domain\Flow\Edge;
+use FlowEngine\Domain\Flow\Node;
+use FlowEngine\Infrastructure\Analyzer\ProjectScanner;
+use FlowEngine\Infrastructure\Analyzer\FileParser;
+use FlowEngine\Infrastructure\Analyzer\FlowBuilder;
+use FlowEngine\Infrastructure\Analyzer\CrossLanguageEdgeDetector;
+use FlowEngine\Infrastructure\Cache\FlowCache;
+use FlowEngine\Infrastructure\Cache\PerFileCache;
+
+final class AstFlowRepository implements FlowRepository
+{
+    private ?Flow $flow = null;
+    private ?string $cacheHash = null;
+
+    /** @var string[] */
+    private array $duplicateIds = [];
+
+    public function __construct(
+        private ProjectScanner $scanner,
+        private FileParser $parser,
+        private FlowBuilder $builder,
+        private ProjectContext $context,
+        private ?FlowCache $cache = null,
+        private ?CrossLanguageEdgeDetector $crossLanguageDetector = null,
+        private ?PerFileCache $perFileCache = null
+    ) {
+    }
+
+    /**
+     * @api 
+     */
+    public function analyze(): void
+    {
+        if ($this->flow !== null) {
+            return;
+        }
+
+        $this->context->boot();
+
+        $files = $this->scanner->scan($this->context);
+
+        $configPath = $this->context->rootPath() . DIRECTORY_SEPARATOR . 'flow-engine.json';
+
+        if ($this->cache && $this->cache->isValid($files, $configPath)) {
+            $this->flow = $this->cache->loadFlow();
+            $this->cacheHash = $this->cache->computeHash($files, $configPath);
+            $this->duplicateIds = $this->cache->loadDuplicateIds();
+            return;
+        }
+
+        $cached = $this->perFileCache?->load() ?? [];
+        $newMap  = [];
+        $nodes   = [];
+        $edges   = [];
+        $symbols = [];
+        $parserSignature = $this->parserSignature();
+
+        foreach ($files as $file) {
+            $fp = PerFileCache::fingerprint($file) . '|parser:' . $parserSignature;
+
+            if (isset($cached[$file]) && $cached[$file]['fp'] === $fp) {
+                $entry = $cached[$file];
+            } else {
+                $ast      = $this->parser->parse($file);
+                $rawNodes = array_map(fn(Node $n) => [
+                    'class'  => $n->class(),
+                    'method' => $n->method(),
+                    'file'   => $n->file(),
+                    'line'   => $n->line(),
+                    'lang'   => $n->language(),
+                    'meta'   => $n->metadata(),
+                ], $ast['nodes'] ?? []);
+                $rawEdges = array_map(fn(Edge $e) => [
+                    'from'   => $e->from(),
+                    'to'     => $e->to(),
+                    'method' => $e->method(),
+                    'type'   => $e->type(),
+                ], $ast['edges'] ?? []);
+                $rawSymbols = array_map(fn(SymbolDTO $s) => $s->toArray(), $ast['symbols'] ?? []);
+                $entry = ['fp' => $fp, 'nodes' => $rawNodes, 'edges' => $rawEdges, 'symbols' => $rawSymbols];
+            }
+
+            $newMap[$file] = $entry;
+
+            foreach ($entry['nodes'] as $nd) {
+                $nodes[] = new Node($nd['class'], $nd['method'], $nd['file'], $nd['line'], $nd['lang'], $nd['meta'] ?? null);
+            }
+            foreach ($entry['edges'] as $ed) {
+                $edges[] = new Edge($ed['from'], $ed['to'], $ed['method'], $ed['type']);
+            }
+            foreach ($entry['symbols'] ?? [] as $sd) {
+                $symbols[] = new SymbolDTO(
+                    $sd['id'],
+                    $sd['name'],
+                    $sd['kind'],
+                    $sd['file'],
+                    $sd['line'],
+                    $sd['sourceModule'] ?? null
+                );
+            }
+        }
+
+        $this->perFileCache?->save($newMap);
+
+        if ($this->crossLanguageDetector !== null) {
+            $edges = $this->crossLanguageDetector->detect($nodes, $edges);
+        }
+
+        $symbolIndex = new SymbolIndex($symbols);
+        $this->flow = $this->builder->build($nodes, $edges, $symbolIndex);
+        $this->duplicateIds = $this->builder->lastDuplicateIds();
+
+        if ($this->cache) {
+            $this->cache->saveFlow($this->flow, $files, $configPath, $this->duplicateIds);
+            $this->cacheHash = $this->cache->computeHash($files, $configPath);
+        }
+    }
+
+    private function parserSignature(): string
+    {
+        $analyzerDir = realpath(__DIR__ . '/../Analyzer');
+        if ($analyzerDir === false) {
+            return 'no-analyzer-dir';
+        }
+
+        $files = [];
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($analyzerDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        foreach ($it as $entry) {
+            if (!$entry->isFile()) {
+                continue;
+            }
+            if (strtolower($entry->getExtension()) !== 'php') {
+                continue;
+            }
+            $files[] = $entry->getPathname();
+        }
+
+        sort($files);
+        $hash = hash_init('sha1');
+        foreach ($files as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+            hash_update($hash, $file . '|' . filemtime($file) . '|' . filesize($file));
+        }
+
+        return hash_final($hash);
+    }
+
+    public function getNodes(): array
+    {
+        $this->ensureAnalyzed();
+        return $this->flow->nodes();
+    }
+
+    public function getNode(string $id): Node
+    {
+        $this->ensureAnalyzed();
+
+        $node = $this->flow->node($id);
+
+        if (!$node) {
+            throw new \LogicException("Node {$id} not found");
+        }
+
+        return $node;
+    }
+
+    public function findNode(string $id): ?Node
+    {
+        $this->ensureAnalyzed();
+        return $this->flow->node($id);
+    }
+
+    private function ensureAnalyzed(): void
+    {
+        if ($this->flow === null) {
+            $this->analyze();
+        }
+    }
+
+    public function getFlow(): FlowContract
+    {
+        $this->ensureAnalyzed();
+        return $this->flow;
+    }
+
+    public function cacheHash(): ?string
+    {
+        return $this->cacheHash;
+    }
+
+    /**
+     * @api
+     * @return string[]
+     */
+    public function duplicateIds(): array
+    {
+        $this->ensureAnalyzed();
+        return $this->duplicateIds;
+    }
+}

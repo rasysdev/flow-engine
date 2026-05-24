@@ -1,0 +1,32 @@
+{
+    "name": "rodri/flow-engine",
+    "description": "Local-first dependency graph and architecture analysis engine for AI-assisted software work.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "nikic/php-parser": "^5.0",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FlowEngine\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "gate:pr": "php bin/quality-gate.php --mode=pr --baseline=baseline-main",
+        "gate:main": "php bin/quality-gate.php --mode=main"
+    },
+    "bin": [
+        "bin/engine.php"
+    ]
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php"
+         colors="true"
+         executionOrder="depends,defects">
+
+    <testsuites>
+        <testsuite name="Flow Engine">
+            <directory>tests</directory>
+            <exclude>tests/_disabled</exclude>
+        </testsuite>
+    </testsuites>
+
+</phpunit>

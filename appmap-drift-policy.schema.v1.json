@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-engine.dev/schema/appmap-drift-policy.v1.json",
+  "title": "AppMap Drift Policy (v1)",
+  "description": "Policy file used by `appmap-diff --policy=...` to gate drift in CI.",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "servicesAddedMax": { "type": "integer", "minimum": 0 },
+        "servicesRemovedMax": { "type": "integer", "minimum": 0 },
+        "serviceEdgesAddedMax": { "type": "integer", "minimum": 0 },
+        "serviceEdgesRemovedMax": { "type": "integer", "minimum": 0 },
+        "inconsistenciesAddedMax": { "type": "integer", "minimum": 0 },
+        "breakingChangesMax": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "blockers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "edgeTypes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "inconsistencySeverities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "breakingDependencyChanges": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

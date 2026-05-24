@@ -1,0 +1,19 @@
+{
+    "version": "1.0",
+    "context": {
+        "type": "composer",
+        "autoload": "vendor/autoload.php"
+    },
+    "scan": {
+        "include": [
+            "src"
+        ],
+        "exclude": [
+            "vendor",
+            "tests"
+        ],
+        "extensions": [
+            "php"
+        ]
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flow-engine": {
+      "type": "stdio",
+      "command": "php",
+      "args": ["${FLOW_ENGINE_BIN}", "mcp"]
+    }
+  }
+}
