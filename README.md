@@ -244,6 +244,14 @@ php bin/quality-gate.php --mode=main
 
 Keep changes local-first, deterministic, and free of required remote services.
 
+## Author / Autor
+
+Flow Engine is created and maintained by [Rodrigo Borges](https://roborg.org), a software developer and architect from Brazil focused on codebase understanding, dependency graphs, refactoring, and AI-assisted software maintenance.
+
+O Flow Engine foi criado e mantido por [Rodrigo Borges](https://roborg.org), desenvolvedor e arquiteto de software no Brasil, com foco em entendimento de codebases, grafos de dependencia, refatoracao e manutencao de software assistida por IA.
+
+More context: [roborg.org](https://roborg.org) · [GitHub](https://github.com/rborges) · [LinkedIn](https://www.linkedin.com/in/rodrigo-borges-dev/)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
