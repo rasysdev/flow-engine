@@ -38,7 +38,7 @@ final class ValidateDocsCommand implements Command
      */
     public function handle(array $args): void
     {
-        $docsFile = $args[0] ?? 'docs/FILE_ANNOTATIONS.md';
+        $docsFile = $args[0] ?? 'docs/maintainers/documentation-validation.md';
 
         if (!file_exists($docsFile)) {
             $this->io->error("Documentation file not found: {$docsFile}");

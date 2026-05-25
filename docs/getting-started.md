@@ -1,39 +1,113 @@
 # Getting Started
 
-## Install
+This guide assumes you clone Flow Engine once, then point it at the project you want to analyze.
 
-```bash
+In examples, replace:
+
+- `C:\dev\my-app` with your project path on Windows.
+- `/home/me/my-app` with your project path on Linux/macOS.
+
+## Requirements
+
+Choose one path:
+
+- Local PHP: Git, PHP 8.2+, and Composer.
+- Docker: Docker Desktop on Windows/macOS or Docker Engine on Linux.
+
+No API key is required for the core CLI, context export, MCP server, or local API.
+
+## Windows PowerShell
+
+Install from source:
+
+```powershell
+git clone https://github.com/rborges/flow-engine.git
+cd flow-engine
 composer install
+php .\bin\engine.php help
 ```
 
-## Analyze A Project
+Analyze a project:
+
+```powershell
+php .\bin\engine.php init C:\dev\my-app
+php .\bin\engine.php analyze C:\dev\my-app
+php .\bin\engine.php metrics C:\dev\my-app
+php .\bin\engine.php context C:\dev\my-app --minimal
+```
+
+## Linux/macOS
+
+Install from source:
 
 ```bash
-php bin/engine.php init /path/to/project
-php bin/engine.php analyze /path/to/project
-php bin/engine.php metrics /path/to/project
+git clone https://github.com/rborges/flow-engine.git
+cd flow-engine
+composer install
+php bin/engine.php help
+```
+
+Analyze a project:
+
+```bash
+php bin/engine.php init /home/me/my-app
+php bin/engine.php analyze /home/me/my-app
+php bin/engine.php metrics /home/me/my-app
+php bin/engine.php context /home/me/my-app --minimal
+```
+
+## Docker
+
+Build the image from the Flow Engine repository:
+
+```bash
+docker build -t flow-engine .
+```
+
+Analyze a Windows project from PowerShell:
+
+```powershell
+docker run --rm -v "C:\dev\my-app:/workspace:ro" flow-engine analyze /workspace
+docker run --rm -v "C:\dev\my-app:/workspace:ro" flow-engine context /workspace --minimal
+```
+
+Analyze a Linux/macOS project:
+
+```bash
+docker run --rm -v "/home/me/my-app:/workspace:ro" flow-engine analyze /workspace
+docker run --rm -v "/home/me/my-app:/workspace:ro" flow-engine context /workspace --minimal
 ```
 
 ## Inspect Findings
 
 ```bash
-php bin/engine.php cycles /path/to/project
-php bin/engine.php architecture /path/to/project
-php bin/engine.php orphans /path/to/project --audit
-php bin/engine.php impact /path/to/project "App\\Service\\OrderService::process"
+php bin/engine.php cycles <project>
+php bin/engine.php architecture <project>
+php bin/engine.php orphans <project> --audit
+php bin/engine.php impact <project> "App\\Service\\OrderService::process"
+php bin/engine.php change-risk <project> --node="App\\Service\\OrderService::process"
 ```
 
 ## Export Context For AI
 
 ```bash
-php bin/engine.php context /path/to/project --minimal
-php bin/engine.php context /path/to/project --entrypoint="App\\Service\\OrderService::process"
+php bin/engine.php context <project> --minimal
+php bin/engine.php context <project> --entrypoint="App\\Service\\OrderService::process"
 ```
+
+Use `--minimal` when you want compact context to paste into an AI assistant. Use MCP when the assistant should inspect the project through tools.
 
 ## Save A Baseline
 
 ```bash
-php bin/engine.php snapshot /path/to/project --save=before-change
-php bin/engine.php snapshot /path/to/project --compare=before-change
-php bin/engine.php architecture-gate /path/to/project --baseline=before-change --fail-on=new
+php bin/engine.php snapshot <project> --save=before-change
+php bin/engine.php snapshot <project> --compare=before-change
+php bin/engine.php architecture-gate <project> --baseline=before-change --fail-on=new
 ```
+
+## Next Steps
+
+- [CLI commands](CLI_COMMANDS.md)
+- [MCP server](mcp.md)
+- [Configuration](configuration.md)
+- [Docker](docker.md)
