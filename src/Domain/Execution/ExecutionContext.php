@@ -35,6 +35,22 @@ final class ExecutionContext
         );
     }
 
+    public static function reconstruct(
+        string $id,
+        ExecutionOrigin $origin,
+        ExecutionMode $mode,
+        string $intent,
+        float $startedAt
+    ): self {
+        return new self(
+            id: $id,
+            origin: $origin,
+            mode: $mode,
+            intent: $intent,
+            startedAt: $startedAt
+        );
+    }
+
     /**
      * Factory de compatibilidade semântica:
      * execução direta de um Node

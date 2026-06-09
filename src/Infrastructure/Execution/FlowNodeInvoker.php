@@ -14,10 +14,10 @@ use FlowEngine\Domain\Execution\{
 };
 use FlowEngine\Domain\Flow\Node;
 use FlowEngine\Domain\Contracts\NodeExecutor;
-use FlowEngine\Domain\Flow\NodeInvoker;
+use FlowEngine\Domain\Flow\ContextualNodeInvoker;
 use Throwable;
 
-final class FlowNodeInvoker implements NodeInvoker
+final class FlowNodeInvoker implements ContextualNodeInvoker
 {
     /** @var ExecutionObserver[] */
     private array $observers;
@@ -43,7 +43,15 @@ final class FlowNodeInvoker implements NodeInvoker
 
     public function invoke(Node $node, array $inputs): ExecutionResult
     {
-        $context = ExecutionContext::system('direct execution');
+        return $this->invokeWithContext(
+            $node,
+            $inputs,
+            ExecutionContext::system('direct execution')
+        );
+    }
+
+    public function invokeWithContext(Node $node, array $inputs, ExecutionContext $context): ExecutionResult
+    {
         $start = microtime(true);
 
         // Avaliar policies antes de executar

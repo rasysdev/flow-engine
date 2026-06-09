@@ -4,6 +4,7 @@ namespace FlowEngine\Application\UseCase;
 
 use FlowEngine\Application\DTO\RunNodeGuidedResult;
 use FlowEngine\Application\Port\NodeInputsProvider;
+use FlowEngine\Domain\Execution\ExecutionContext;
 
 use LogicException;
 
@@ -35,7 +36,8 @@ final class RunNodeGuided
 
         $execution = $this->executeNode->execute(
             $node,
-            $resolved->args
+            $resolved->args,
+            ExecutionContext::guided("guided execution of {$nodeId}")
         );
 
         return new RunNodeGuidedResult(

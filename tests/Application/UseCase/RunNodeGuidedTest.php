@@ -3,6 +3,8 @@
 namespace Tests\Application\UseCase;
 
 use FlowEngine\Domain\Execution\ExecutionContext;
+use FlowEngine\Domain\Execution\ExecutionMode;
+use FlowEngine\Domain\Execution\ExecutionOrigin;
 use FlowEngine\Domain\Execution\ExecutionResult;
 use PHPUnit\Framework\TestCase;
 use FlowEngine\Application\UseCase\RunNodeGuided;
@@ -12,7 +14,7 @@ use FlowEngine\Application\UseCase\ResolveGuidedArguments;
 use FlowEngine\Application\Port\NodeInputsProvider;
 use FlowEngine\Domain\Flow\Node;
 use FlowEngine\Domain\Contracts\FlowRepository;
-use FlowEngine\Domain\Flow\NodeInvoker;
+use FlowEngine\Domain\Flow\ContextualNodeInvoker;
 use FlowEngine\Application\DTO\NodeInputs;
 use FlowEngine\Application\DTO\NodeInputDefinition;
 
@@ -47,20 +49,30 @@ final class RunNodeGuidedTest extends TestCase
                 )
             );
 
-        $context = ExecutionContext::forNode('Calculator::sum');
-
-        $executionResult = ExecutionResult::success(
-            context: $context,
-            nodeId: 'Calculator::sum',
-            inputs: [1, 2],
-            output: 3,
-            durationMs: 1.0
-        );
-
-        $invoker = $this->createMock(NodeInvoker::class);
+        $invoker = $this->createMock(ContextualNodeInvoker::class);
         $invoker
-            ->method('invoke')
-            ->willReturn($executionResult);
+            ->expects($this->once())
+            ->method('invokeWithContext')
+            ->with(
+                $node,
+                [1, 2],
+                $this->callback(function (ExecutionContext $context): bool {
+                    $this->assertSame(ExecutionOrigin::USER, $context->origin);
+                    $this->assertSame(ExecutionMode::GUIDED, $context->mode);
+                    $this->assertSame('guided execution of Calculator::sum', $context->intent);
+
+                    return true;
+                })
+            )
+            ->willReturnCallback(function (Node $node, array $inputs, ExecutionContext $context): ExecutionResult {
+                return ExecutionResult::success(
+                    context: $context,
+                    nodeId: $node->id(),
+                    inputs: $inputs,
+                    output: 3,
+                    durationMs: 1.0
+                );
+            });
 
         $executeNode = new ExecuteNode($invoker);
 
@@ -75,6 +87,7 @@ final class RunNodeGuidedTest extends TestCase
 
         $this->assertSame('Calculator::sum', $result->nodeId);
         $this->assertSame(3, $result->result->output);
+        $this->assertSame(ExecutionMode::GUIDED, $result->result->context->mode);
         $this->assertCount(2, $result->inputs);
     }
 }
