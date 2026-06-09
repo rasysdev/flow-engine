@@ -17,7 +17,7 @@ final class ExecutionResult
     }
 
     public static function success(
-        ?ExecutionContext $context,
+        ExecutionContext $context,
         string $nodeId,
         array $inputs,
         mixed $output,
@@ -34,7 +34,7 @@ final class ExecutionResult
     }
 
     public static function failure(
-        ?ExecutionContext $context,
+        ExecutionContext $context,
         string $nodeId,
         array $inputs,
         Throwable $exception,

@@ -7,6 +7,8 @@ use FlowEngine\Infrastructure\Execution\Observability\FileExecutionEventStore;
 use FlowEngine\Domain\Execution\ExecutionEvent;
 use FlowEngine\Domain\Execution\ExecutionEventType;
 use FlowEngine\Domain\Execution\ExecutionContext;
+use FlowEngine\Domain\Execution\ExecutionMode;
+use FlowEngine\Domain\Execution\ExecutionOrigin;
 
 /**
  * @covers \FlowEngine\Infrastructure\Execution\Observability\FileExecutionEventStore
@@ -211,5 +213,51 @@ final class FileExecutionEventStoreTest extends TestCase
         $this->assertSame(10.0, $events[0]->durationMs);
         $this->assertNotNull($events[0]->exception);
         $this->assertSame('Something went wrong', $events[0]->exception->getMessage());
+    }
+
+    public function test_it_preserves_execution_context_when_deserializing(): void
+    {
+        $store = new FileExecutionEventStore($this->tempFile);
+        $context = ExecutionContext::guided('guided execution of Service::process');
+
+        $store->append(ExecutionEvent::succeeded(
+            nodeId: 'Service::process',
+            inputs: [],
+            output: 'ok',
+            durationMs: 12.0,
+            context: $context
+        ));
+
+        $events = $store->all();
+
+        $this->assertCount(1, $events);
+        $this->assertNotNull($events[0]->context);
+        $this->assertSame($context->id, $events[0]->context->id);
+        $this->assertSame(ExecutionOrigin::USER, $events[0]->context->origin);
+        $this->assertSame(ExecutionMode::GUIDED, $events[0]->context->mode);
+        $this->assertSame('guided execution of Service::process', $events[0]->context->intent);
+        $this->assertSame($context->startedAt, $events[0]->context->startedAt);
+    }
+
+    public function test_it_deserializes_legacy_events_without_context(): void
+    {
+        file_put_contents($this->tempFile, json_encode([
+            'type' => 'execution.succeeded',
+            'nodeId' => 'Legacy::run',
+            'timestamp' => 123.0,
+            'durationMs' => 4.0,
+            'inputs' => [],
+            'output' => null,
+            'exception' => null,
+        ], JSON_THROW_ON_ERROR) . "\n");
+
+        $store = new FileExecutionEventStore($this->tempFile);
+        $events = $store->all();
+
+        $this->assertCount(1, $events);
+        $this->assertNotNull($events[0]->context);
+        $this->assertSame(ExecutionOrigin::SYSTEM, $events[0]->context->origin);
+        $this->assertSame(ExecutionMode::AUTOMATIC, $events[0]->context->mode);
+        $this->assertSame('replay', $events[0]->context->intent);
     }
 }

@@ -3,6 +3,8 @@
 namespace FlowEngine\Infrastructure\Execution\Observability;
 
 use FlowEngine\Domain\Execution\ExecutionContext;
+use FlowEngine\Domain\Execution\ExecutionMode;
+use FlowEngine\Domain\Execution\ExecutionOrigin;
 use FlowEngine\Domain\Execution\ExecutionEvent;
 use FlowEngine\Domain\Execution\ExecutionEventStore;
 use FlowEngine\Domain\Execution\ExecutionEventType;
@@ -113,6 +115,13 @@ final class FileExecutionEventStore implements ExecutionEventStore
             'exception' => $event->exception !== null
                 ? $event->exception->getMessage()
                 : null,
+            'context' => $event->context !== null ? [
+                'id' => $event->context->id,
+                'origin' => $event->context->origin->value,
+                'mode' => $event->context->mode->value,
+                'intent' => $event->context->intent,
+                'startedAt' => $event->context->startedAt,
+            ] : null,
         ];
     }
 
@@ -129,7 +138,7 @@ final class FileExecutionEventStore implements ExecutionEventStore
     {
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $type = ExecutionEventType::from($data['type']);
-        $context = ExecutionContext::system('replay');
+        $context = $this->deserializeContext($data['context'] ?? null);
 
         $exception = isset($data['exception'])
             ? new RuntimeException($data['exception'])
@@ -144,6 +153,24 @@ final class FileExecutionEventStore implements ExecutionEventStore
             output: $data['output'] ?? null,
             exception: $exception,
             context: $context
+        );
+    }
+
+    /**
+     * @param array<string, mixed>|null $data
+     */
+    private function deserializeContext(?array $data): ExecutionContext
+    {
+        if ($data === null) {
+            return ExecutionContext::system('replay');
+        }
+
+        return ExecutionContext::reconstruct(
+            id: (string) $data['id'],
+            origin: ExecutionOrigin::from($data['origin']),
+            mode: ExecutionMode::from($data['mode']),
+            intent: (string) $data['intent'],
+            startedAt: (float) $data['startedAt']
         );
     }
 }
