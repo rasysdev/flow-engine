@@ -2,7 +2,9 @@
 
 ## Current Focus
 
-Flow Engine is an open-source, local-first dependency graph and architecture analysis engine. The public package focuses on deterministic code facts that developers and AI assistants can inspect without sending source code to a remote service.
+Flow Engine is an open-source, local-first dependency graph and architecture analysis engine.
+The public package focuses on deterministic code facts that developers and AI assistants can inspect
+without sending source code to a remote service.
 
 ## Public Core
 
@@ -34,4 +36,5 @@ Flow Engine is an open-source, local-first dependency graph and architecture ana
 
 ## Not In The Public Core
 
-Some advanced product workflows may live outside this repository later. The public core should stay useful on its own: local, scriptable, inspectable, and safe to run in private codebases.
+Some advanced product workflows may live outside this repository later. The public core should stay
+useful on its own: local, scriptable, inspectable, and safe to run in private codebases.

@@ -4,6 +4,8 @@
 
 A node is a code element Flow Engine can reason about, such as a method, function, class-like unit, route handler, or module-level function.
 
+Example: `App\\Service\\OrderService::process`.
+
 ## Edge
 
 An edge is a relationship between nodes: calls, framework entrypoints, route links, HTTP calls, imports, and other detected dependencies.
@@ -11,6 +13,8 @@ An edge is a relationship between nodes: calls, framework entrypoints, route lin
 ## Flow
 
 A flow is the graph formed by nodes and edges.
+
+Use `flow <path>` or `nodes <path>` to inspect it from the CLI.
 
 ## Metrics
 
@@ -24,6 +28,8 @@ A cycle is a dependency loop. Flow Engine reports exact cycle members.
 
 Architecture rules define allowed and forbidden dependencies between layers or areas.
 
+Example: domain code should not depend on infrastructure code.
+
 ## Orphan Candidate
 
 An orphan candidate is code with no detected incoming path after framework-aware suppression rules are applied.
@@ -31,3 +37,5 @@ An orphan candidate is code with no detected incoming path after framework-aware
 ## Context Export
 
 Context export turns graph facts into compact Markdown for AI assistants.
+
+Use `context <path> --minimal` for a small export, or `context <path> --entrypoint=<node>` for focused context around one code path.

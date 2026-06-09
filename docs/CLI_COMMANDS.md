@@ -6,6 +6,19 @@ Run commands with:
 php bin/engine.php <command> [arguments] [options]
 ```
 
+On Windows PowerShell, use:
+
+```powershell
+php .\bin\engine.php <command> [arguments] [options]
+```
+
+In this page, `<path>` is the project you want to analyze. It can be a Windows path such as
+`C:\dev\my-app`, a Unix path such as `/home/me/my-app`, or `.` for the current directory.
+
+Most users start with `analyze`, `metrics`, `cycles`, `architecture`, `orphans --audit`,
+and `context --minimal`. The other commands are useful when you need a deeper graph lookup,
+a local baseline, or integration with AI tooling.
+
 ## Setup
 
 - `init <path>`: create `flow-engine.json`.
@@ -39,10 +52,10 @@ php bin/engine.php <command> [arguments] [options]
 
 - `context <path> [--minimal]`: export compact context.
 - `context <path> --entrypoint=<node>`: focused context.
-- `ask "<question>" <path>`: ask through an optional LLM provider.
+- `ask "<question>" <path>`: ask through an optional LLM provider configured with environment variables.
 - `interpret <path> --type=<type>`: optional interpretation for graph reports.
 
-## Refactoring And Remediation
+## Advanced Local Planning
 
 - `refactor-plan <path> --node=<node>`: graph-backed refactor plan.
 - `refactor-safety <path> --node=<node>`: safety assessment.
@@ -65,11 +78,21 @@ php bin/engine.php <command> [arguments] [options]
 
 ## Servers And Integrations
 
-- `api <path>`: start the local read-only HTTP API.
+- `api <path> [--host=127.0.0.1] [--port=8080]`: start the local read-only HTTP API.
 - `mcp`: start the MCP stdio server.
 - `watch <path>`: rerun analysis on file changes.
 
-## Examples
+## Windows Examples
+
+```powershell
+php .\bin\engine.php analyze C:\dev\my-app
+php .\bin\engine.php metrics C:\dev\my-app
+php .\bin\engine.php context C:\dev\my-app --minimal
+php .\bin\engine.php snapshot C:\dev\my-app --save=before-refactor
+php .\bin\engine.php architecture-gate C:\dev\my-app --baseline=before-refactor --fail-on=new
+```
+
+## Linux/macOS Examples
 
 ```bash
 php bin/engine.php analyze .
@@ -77,4 +100,13 @@ php bin/engine.php metrics .
 php bin/engine.php context . --minimal
 php bin/engine.php snapshot . --save=before-refactor
 php bin/engine.php architecture-gate . --baseline=before-refactor --fail-on=new
+```
+
+## Output Format
+
+Most analysis commands print JSON or structured text to stdout. You can redirect output to a local file:
+
+```bash
+php bin/engine.php context <path> --minimal > flow-context.md
+php bin/engine.php diagram <path> --view=class > class-diagram.md
 ```

@@ -2,7 +2,9 @@
 
 Flow Engine gives AI assistants and developers a factual map of a codebase.
 
-Static source reads are useful, but they are easy to misread at scale. Flow Engine builds a deterministic dependency graph first, then derives metrics, cycles, architecture findings, orphan candidates, impact, and risk from that graph.
+Static source reads are useful, but they are easy to misread at scale. Flow Engine builds
+a deterministic dependency graph first, then derives metrics, cycles, architecture findings,
+orphan candidates, impact, and risk from that graph.
 
 The goal is not to replace human judgment. The goal is to make every review, refactor, and architecture discussion start from the same local facts.
 
