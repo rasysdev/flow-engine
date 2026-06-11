@@ -50,14 +50,19 @@ final class BugsCommand implements Command
     {
         echo "Bug Detection Report\n";
         echo str_repeat('=', 60) . "\n";
-        echo "Total bugs: {$report->totalBugs}  |  Critical: {$report->criticalBugs}\n\n";
+        echo "Total bugs: {$report->totalBugs}  |  Critical: {$report->criticalBugs}\n";
+        $infoCount = $report->bySeverity['INFO'] ?? 0;
+        if ($infoCount > 0) {
+            echo "Info (graceful degradation): {$infoCount}\n";
+        }
+        echo "\n";
 
-        if ($report->totalBugs === 0) {
+        if ($report->totalBugs === 0 && $infoCount === 0) {
             echo "No bugs detected.\n";
             return;
         }
 
-        $bySeverity = ['CRITICAL' => [], 'HIGH' => [], 'MEDIUM' => [], 'LOW' => []];
+        $bySeverity = ['CRITICAL' => [], 'HIGH' => [], 'MEDIUM' => [], 'LOW' => [], 'INFO' => []];
         foreach ($report->bugs as $bug) {
             $bySeverity[$bug['severity']][] = $bug;
         }

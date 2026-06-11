@@ -11,6 +11,7 @@ final readonly class Bug
 {
     public const TYPE_NULL_DEREFERENCE     = 'null_dereference';
     public const TYPE_HARDCODED_CREDENTIAL = 'hardcoded_credential';
+    public const TYPE_GRACEFUL_DEGRADATION = 'graceful_degradation';
 
     public const TYPE_PYTHON_EXCEPTION_SWALLOWING = 'python_exception_swallowing';
     public const TYPE_PYTHON_MUTABLE_DEFAULT      = 'python_mutable_default_arg';

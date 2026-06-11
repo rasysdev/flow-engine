@@ -29,6 +29,20 @@ final class BugDetector
             $nodeId     = $finding['nodeId'];
             $confidence = (float) $finding['confidence'];
 
+            if ($finding['type'] === Bug::TYPE_GRACEFUL_DEGRADATION) {
+                $bugs[] = new Bug(
+                    nodeId:      $nodeId,
+                    type:        $finding['type'],
+                    description: $finding['description'],
+                    severity:    'INFO',
+                    bugScore:    0,
+                    confidence:  $confidence,
+                    file:        $finding['file'],
+                    line:        $finding['line'],
+                );
+                continue;
+            }
+
             $bugScore = $this->score($nodeId, $confidence);
 
             if ($bugScore < $minScore) {
@@ -60,16 +74,20 @@ final class BugDetector
      */
     public function stats(array $bugs): array
     {
-        $bySeverity = ['CRITICAL' => 0, 'HIGH' => 0, 'MEDIUM' => 0, 'LOW' => 0];
+        $bySeverity = ['CRITICAL' => 0, 'HIGH' => 0, 'MEDIUM' => 0, 'LOW' => 0, 'INFO' => 0];
         $byType     = [];
+        $totalBugs  = 0;
 
         foreach ($bugs as $bug) {
             $bySeverity[$bug->severity] = ($bySeverity[$bug->severity] ?? 0) + 1;
             $byType[$bug->type]         = ($byType[$bug->type] ?? 0) + 1;
+            if ($bug->severity !== 'INFO') {
+                $totalBugs++;
+            }
         }
 
         return [
-            'totalBugs'  => count($bugs),
+            'totalBugs'  => $totalBugs,
             'bySeverity' => $bySeverity,
             'byType'     => $byType,
         ];
