@@ -139,9 +139,11 @@ final class InMemoryExecutionEventStoreTest extends TestCase
             context: ExecutionContext::system('test')
         ));
 
+        // Wall-clock separation on both sides of the cutoff: microtime() may not
+        // advance between adjacent calls, so space A strictly before the cutoff
+        // and B strictly after it to keep the inclusive "since" boundary stable.
+        usleep(1000);
         $cutoff = microtime(true);
-
-        // Small delay to ensure timestamp difference
         usleep(1000);
 
         $store->append(ExecutionEvent::succeeded(
