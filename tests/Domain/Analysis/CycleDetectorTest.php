@@ -229,6 +229,52 @@ final class CycleDetectorTest extends TestCase
         $this->assertContains('B::method', $cycle['nodes']);
     }
 
+    public function test_intra_class_cycle_gets_info_severity(): void
+    {
+        // Parser::parseExpr <-> Parser::parseAtom (mesma classe, recursao mutua)
+        $nodes = [
+            new Node('Parser', 'parseExpr', __FILE__, 1),
+            new Node('Parser', 'parseAtom', __FILE__, 2),
+        ];
+
+        $edges = [
+            new Edge('Parser::parseExpr', 'Parser::parseAtom', 'method'),
+            new Edge('Parser::parseAtom', 'Parser::parseExpr', 'method'),
+        ];
+
+        $flow = new Flow($nodes, $edges);
+        $detector = new CycleDetector($flow);
+
+        $cycles = $detector->detectCycles();
+
+        $this->assertCount(1, $cycles);
+        $this->assertEquals('INFO', $cycles[0]['severity']);
+        $this->assertEquals('intra-class mutual recursion', $cycles[0]['reason']);
+    }
+
+    public function test_cross_class_cycle_does_not_get_info_severity(): void
+    {
+        // ServiceA <-> ServiceB (classes diferentes)
+        $nodes = [
+            new Node('ServiceA', 'handle', __FILE__, 1),
+            new Node('ServiceB', 'handle', __FILE__, 2),
+        ];
+
+        $edges = [
+            new Edge('ServiceA::handle', 'ServiceB::handle', 'method'),
+            new Edge('ServiceB::handle', 'ServiceA::handle', 'method'),
+        ];
+
+        $flow = new Flow($nodes, $edges);
+        $detector = new CycleDetector($flow);
+
+        $cycles = $detector->detectCycles();
+
+        $this->assertCount(1, $cycles);
+        $this->assertNotEquals('INFO', $cycles[0]['severity']);
+        $this->assertNull($cycles[0]['reason']);
+    }
+
     public function test_handles_disconnected_components(): void
     {
         // Grafo com componentes desconectados

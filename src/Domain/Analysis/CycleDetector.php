@@ -61,10 +61,12 @@ final class CycleDetector
         
         foreach ($this->sccs as $scc) {
             if (count($scc) > 1) {
+                $intraClass = $this->isIntraClassCycle($scc);
                 $cycles[] = [
                     'nodes' => $scc,
                     'size' => count($scc),
-                    'severity' => $this->calculateSeverity(count($scc)),
+                    'severity' => $intraClass ? 'INFO' : $this->calculateSeverity(count($scc)),
+                    'reason' => $intraClass ? 'intra-class mutual recursion' : null,
                 ];
             }
         }
@@ -158,6 +160,23 @@ final class CycleDetector
     }
 
     /**
+     * True when every node in the cycle belongs to the same class — mutual
+     * recursion within one class (e.g. a recursive parser), a legitimate
+     * pattern rather than a cross-class architectural cycle.
+     *
+     * @param string[] $scc
+     */
+    private function isIntraClassCycle(array $scc): bool
+    {
+        $classes = array_map(
+            static fn(string $nodeId): string => explode('::', $nodeId)[0],
+            $scc
+        );
+
+        return count(array_unique($classes)) === 1;
+    }
+
+    /**
      * Calcula severidade baseado no tamanho do ciclo.
      */
     private function calculateSeverity(int $size): string
@@ -187,6 +206,7 @@ final class CycleDetector
         $cycles = $this->detectCycles();
         
         $bySeverity = [
+            'INFO' => 0,
             'LOW' => 0,
             'MEDIUM' => 0,
             'HIGH' => 0,
