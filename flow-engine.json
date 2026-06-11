@@ -15,5 +15,15 @@
         "extensions": [
             "php"
         ]
+    },
+    "architecture": {
+        "layers": {
+            "AI": ["FlowEngine\\AI\\"],
+            "Bootstrap": ["FlowEngine\\Bootstrap\\"],
+            "Console": ["FlowEngine\\Console\\"],
+            "Cache": ["FlowEngine\\Cache\\"],
+            "Diagram": ["FlowEngine\\Diagram\\"],
+            "Execution": ["FlowEngine\\Execution\\"]
+        }
     }
 }
