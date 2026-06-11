@@ -3,6 +3,12 @@
 namespace Tests\Application\InfraMap;
 
 use FlowEngine\Application\InfraMap\InfraMapBuilder;
+use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
+use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
+use FlowEngine\Infrastructure\Infra\CaddyTopologyAnalyzer;
+use FlowEngine\Infrastructure\Infra\FileInventoryAnalyzer;
+use FlowEngine\Infrastructure\Infra\ScriptTopologyAnalyzer;
+use FlowEngine\Infrastructure\Infra\WebCrawlRulesAnalyzer;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -39,7 +45,7 @@ CADDY);
             ],
         ], JSON_PRETTY_PRINT));
 
-        $result = (new InfraMapBuilder())->buildForCatalog($catalog, 'summary', ['proxy']);
+        $result = (new InfraMapBuilder(new FileInventoryAnalyzer(), new DockerTopologyAnalyzer(), new CaddyTopologyAnalyzer(), new WebCrawlRulesAnalyzer(), new ScriptTopologyAnalyzer(), new FlowServiceCatalogLoader()))->buildForCatalog($catalog, 'summary', ['proxy']);
 
         $this->assertSame('infra_map', $result['kind']);
         $this->assertSame('catalog', $result['scope']);
@@ -62,7 +68,7 @@ services:
       SECRET_TOKEN: not-returned
 YAML);
 
-        $result = (new InfraMapBuilder())->buildForProject($base, 'full', ['docker']);
+        $result = (new InfraMapBuilder(new FileInventoryAnalyzer(), new DockerTopologyAnalyzer(), new CaddyTopologyAnalyzer(), new WebCrawlRulesAnalyzer(), new ScriptTopologyAnalyzer(), new FlowServiceCatalogLoader()))->buildForProject($base, 'full', ['docker']);
 
         $this->assertContains(
             [

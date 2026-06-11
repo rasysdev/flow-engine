@@ -2,12 +2,13 @@
 
 namespace FlowEngine\Infrastructure\Infra;
 
+use FlowEngine\Application\InfraMap\Contract\ProjectSectionAnalyzer;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
-final class FileInventoryAnalyzer
+final class FileInventoryAnalyzer implements ProjectSectionAnalyzer
 {
     private const IGNORED_DIRECTORIES = [
         '.git',

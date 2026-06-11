@@ -2,7 +2,9 @@
 
 namespace FlowEngine\Infrastructure\Docker;
 
-final class DockerTopologyAnalyzer
+use FlowEngine\Application\InfraMap\Contract\DockerTopologyReader;
+
+final class DockerTopologyAnalyzer implements DockerTopologyReader
 {
     public function __construct(
         private ?SimpleYamlParser $yamlParser = null,

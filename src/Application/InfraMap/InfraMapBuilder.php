@@ -2,31 +2,22 @@
 
 namespace FlowEngine\Application\InfraMap;
 
-use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
-use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
-use FlowEngine\Infrastructure\Infra\CaddyTopologyAnalyzer;
-use FlowEngine\Infrastructure\Infra\FileInventoryAnalyzer;
-use FlowEngine\Infrastructure\Infra\ScriptTopologyAnalyzer;
-use FlowEngine\Infrastructure\Infra\WebCrawlRulesAnalyzer;
+use FlowEngine\Application\InfraMap\Contract\CatalogLoader;
+use FlowEngine\Application\InfraMap\Contract\DockerTopologyReader;
+use FlowEngine\Application\InfraMap\Contract\ProjectSectionAnalyzer;
 
 final class InfraMapBuilder
 {
     private const ALL_SECTIONS = ['files', 'docker', 'proxy', 'web', 'scripts'];
 
     public function __construct(
-        private ?FileInventoryAnalyzer $fileInventoryAnalyzer = null,
-        private ?DockerTopologyAnalyzer $dockerTopologyAnalyzer = null,
-        private ?CaddyTopologyAnalyzer $proxyAnalyzer = null,
-        private ?WebCrawlRulesAnalyzer $webAnalyzer = null,
-        private ?ScriptTopologyAnalyzer $scriptAnalyzer = null,
-        private ?FlowServiceCatalogLoader $catalogLoader = null,
+        private ProjectSectionAnalyzer $fileInventoryAnalyzer,
+        private DockerTopologyReader $dockerTopologyAnalyzer,
+        private ProjectSectionAnalyzer $proxyAnalyzer,
+        private ProjectSectionAnalyzer $webAnalyzer,
+        private ProjectSectionAnalyzer $scriptAnalyzer,
+        private CatalogLoader $catalogLoader,
     ) {
-        $this->fileInventoryAnalyzer ??= new FileInventoryAnalyzer();
-        $this->dockerTopologyAnalyzer ??= new DockerTopologyAnalyzer();
-        $this->proxyAnalyzer ??= new CaddyTopologyAnalyzer();
-        $this->webAnalyzer ??= new WebCrawlRulesAnalyzer();
-        $this->scriptAnalyzer ??= new ScriptTopologyAnalyzer();
-        $this->catalogLoader ??= new FlowServiceCatalogLoader();
     }
 
     /**

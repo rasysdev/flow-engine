@@ -7,11 +7,10 @@ use FlowEngine\Application\AppMap\ApplicationMapBuilder;
 use FlowEngine\Application\AppMap\MermaidDiagramGenerator;
 use FlowEngine\Application\AppMap\ServiceInfo;
 use FlowEngine\Bootstrap\Container;
+use FlowEngine\Bootstrap\InfraServices;
 use FlowEngine\Console\ConsoleIO;
 use FlowEngine\Domain\Flow\Flow;
 use FlowEngine\Domain\Flow\FlowTracer;
-use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
-use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
 
 final class DiagramCommand implements Command
 {
@@ -200,37 +199,7 @@ final class DiagramCommand implements Command
      */
     private function entriesFromCatalog(string $catalogPath): array
     {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath);
-        if ($catalog === null) {
-            return [];
-        }
-
-        $entries = $catalog['entries'];
-        $docker = (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
-        $hostnamesByService = [];
-        foreach ($docker['serviceMappings'] as $mapping) {
-            if (!is_array($mapping)) {
-                continue;
-            }
-
-            $service = (string) ($mapping['service'] ?? '');
-            if ($service === '') {
-                continue;
-            }
-
-            $hostnamesByService[$service] = is_array($mapping['hostnames'] ?? null)
-                ? array_values(array_filter($mapping['hostnames'], 'is_string'))
-                : [];
-        }
-
-        return array_map(function (array $entry) use ($hostnamesByService): array {
-            $serviceName = $entry['name'] ?? basename(rtrim($entry['path'], DIRECTORY_SEPARATOR));
-            $entry['hostnames'] = array_values(array_unique(array_merge(
-                $entry['hostnames'] ?? [],
-                $hostnamesByService[$serviceName] ?? []
-            )));
-            return $entry;
-        }, $entries);
+        return (new InfraServices())->resolveCatalogServices()->enrichedEntries($catalogPath);
     }
 
     /**

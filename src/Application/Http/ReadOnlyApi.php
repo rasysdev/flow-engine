@@ -12,8 +12,7 @@ use FlowEngine\Application\AppMap\ServiceInfo;
 use FlowEngine\Application\DTO\EdgeDTO;
 use FlowEngine\Application\DTO\NodeDTO;
 use FlowEngine\Bootstrap\Container;
-use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
-use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
+use FlowEngine\Bootstrap\InfraServices;
 use RuntimeException;
 use Throwable;
 
@@ -966,37 +965,7 @@ final class ReadOnlyApi
      */
     private function catalogEntriesFromPath(string $catalogPath): array
     {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath, $this->projectPath);
-        if ($catalog === null) {
-            return [];
-        }
-
-        $entries = $catalog['entries'];
-        $docker = (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
-        $hostnamesByService = [];
-        foreach ($docker['serviceMappings'] as $mapping) {
-            if (!is_array($mapping)) {
-                continue;
-            }
-
-            $service = (string) ($mapping['service'] ?? '');
-            if ($service === '') {
-                continue;
-            }
-
-            $hostnamesByService[$service] = is_array($mapping['hostnames'] ?? null)
-                ? array_values(array_filter($mapping['hostnames'], 'is_string'))
-                : [];
-        }
-
-        return array_map(function (array $entry) use ($hostnamesByService): array {
-            $serviceName = $entry['name'] ?? basename(rtrim($entry['path'], DIRECTORY_SEPARATOR));
-            $entry['hostnames'] = array_values(array_unique(array_merge(
-                $entry['hostnames'] ?? [],
-                $hostnamesByService[$serviceName] ?? []
-            )));
-            return $entry;
-        }, $entries);
+        return (new InfraServices())->resolveCatalogServices()->enrichedEntries($catalogPath, $this->projectPath);
     }
 
     /**
@@ -1055,20 +1024,7 @@ final class ReadOnlyApi
      */
     private function dockerTopologyForEntries(string $catalogPath, array $entries): array
     {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath, $this->projectPath);
-        if ($catalog === null) {
-            return [
-                'detectedComposeFiles' => [],
-                'dockerfiles' => [],
-                'environmentFiles' => [],
-                'containers' => [],
-                'networks' => [],
-                'serviceMappings' => [],
-                'warnings' => [],
-            ];
-        }
-
-        return (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
+        return (new InfraServices())->resolveCatalogServices()->dockerTopology($catalogPath, $entries, $this->projectPath);
     }
 
     /**
