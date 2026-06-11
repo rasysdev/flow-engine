@@ -17,6 +17,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/rborges/flow-engine/actions/workflows/ci.yml"><img src="https://github.com/rborges/flow-engine/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-64b6ac">
   <img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4">
   <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-d6a84f">
