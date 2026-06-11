@@ -22,8 +22,7 @@
             "Bootstrap": ["FlowEngine\\Bootstrap\\"],
             "Console": ["FlowEngine\\Console\\"],
             "Cache": ["FlowEngine\\Cache\\"],
-            "Diagram": ["FlowEngine\\Diagram\\"],
-            "Execution": ["FlowEngine\\Execution\\"]
+            "Diagram": ["FlowEngine\\Diagram\\"]
         }
     }
 }
