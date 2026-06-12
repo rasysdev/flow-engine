@@ -3,8 +3,9 @@
 namespace FlowEngine\Infrastructure\Config;
 
 use FlowEngine\Application\AppMap\OpenApiContractParser;
+use FlowEngine\Application\InfraMap\Contract\CatalogLoader;
 
-final class FlowServiceCatalogLoader
+final class FlowServiceCatalogLoader implements CatalogLoader
 {
     /**
      * @return array{

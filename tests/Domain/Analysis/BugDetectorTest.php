@@ -171,6 +171,38 @@ final class BugDetectorTest extends TestCase
         $this->assertArrayHasKey('bySeverity', $stats);
     }
 
+    public function test_graceful_degradation_gets_info_severity_and_zero_score(): void
+    {
+        $flow     = $this->makeFlow();
+        $detector = new BugDetector($flow, new MetricsAnalyzer($flow));
+
+        $finding = $this->rawFinding('App\\Svc::handle', 'graceful_degradation', 0.9);
+        $bugs    = $detector->detectBugs([$finding]);
+
+        $this->assertCount(1, $bugs);
+        $this->assertSame('INFO', $bugs[0]->severity);
+        $this->assertSame(0, $bugs[0]->bugScore);
+    }
+
+    public function test_graceful_degradation_does_not_count_in_total_bugs(): void
+    {
+        $flow     = $this->makeFlow();
+        $detector = new BugDetector($flow, new MetricsAnalyzer($flow));
+
+        $findings = [
+            $this->rawFinding('A::a', 'graceful_degradation', 0.9),
+            $this->rawFinding('B::b', 'graceful_degradation', 0.9),
+            $this->rawFinding('C::c', 'exception_swallowing', 0.9),
+        ];
+
+        $bugs  = $detector->detectBugs($findings);
+        $stats = $detector->stats($bugs);
+
+        $this->assertSame(1, $stats['totalBugs'], 'Only exception_swallowing counts as bug');
+        $this->assertSame(2, $stats['bySeverity']['INFO']);
+        $this->assertSame(2, $stats['byType']['graceful_degradation']);
+    }
+
     public function test_bugs_are_sorted_descending_by_score(): void
     {
         // Nodes in graph with different fanIn values

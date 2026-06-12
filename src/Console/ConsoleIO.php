@@ -17,11 +17,6 @@ class ConsoleIO
         fwrite(STDERR, "[ERROR] {$message}\n");
     }
 
-    public function writeln(string $message = ''): void
-    {
-        echo $message . "\n";
-    }
-
     public function json(array $data): void
     {
         echo json_encode($data, JSON_PRETTY_PRINT) . "\n";

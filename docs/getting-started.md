@@ -11,7 +11,7 @@ In examples, replace:
 
 Choose one path:
 
-- Local PHP: Git, PHP 8.2+, and Composer.
+- Local PHP: Git, PHP 8.3+, and Composer.
 - Docker: Docker Desktop on Windows/macOS or Docker Engine on Linux.
 
 No API key is required for the core CLI, context export, MCP server, or local API.

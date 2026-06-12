@@ -171,7 +171,9 @@ final class BugPatternCollector extends NodeVisitorAbstract
         }
 
         foreach ($node->catches as $catch) {
-            if ($this->isCatchSwallowing($catch)) {
+            $kind = $this->classifyCatch($catch);
+
+            if ($kind === 'swallowing') {
                 $this->findings[] = [
                     'nodeId'      => $this->nodeId(),
                     'type'        => 'exception_swallowing',
@@ -180,11 +182,20 @@ final class BugPatternCollector extends NodeVisitorAbstract
                     'file'        => $this->file,
                     'line'        => $catch->getStartLine() ?: null,
                 ];
+            } elseif ($kind === 'graceful') {
+                $this->findings[] = [
+                    'nodeId'      => $this->nodeId(),
+                    'type'        => 'graceful_degradation',
+                    'description' => 'Caught exception is handled with a fallback return (graceful degradation, not a bug)',
+                    'confidence'  => 0.9,
+                    'file'        => $this->file,
+                    'line'        => $catch->getStartLine() ?: null,
+                ];
             }
         }
     }
 
-    private function isCatchSwallowing(Stmt\Catch_ $catch): bool
+    private function classifyCatch(Stmt\Catch_ $catch): string
     {
         // Comments in PHP-Parser become Stmt\Nop — ignore them when evaluating emptiness
         $meaningful = array_values(
@@ -192,29 +203,43 @@ final class BugPatternCollector extends NodeVisitorAbstract
         );
 
         if ($meaningful === []) {
-            return true;
+            return 'swallowing';
         }
 
-        if (count($meaningful) === 1) {
-            $stmt = $meaningful[0];
-            if ($stmt instanceof Stmt\Return_) {
-                if ($stmt->expr === null) {
-                    return true;
-                }
+        if (count($meaningful) === 1 && $meaningful[0] instanceof Stmt\Return_) {
+            $expr = $meaningful[0]->expr;
 
-                if ($this->isIntentionalTypedFallback($stmt->expr)) {
-                    return false;
-                }
-
-                if ($this->isNullLiteral($stmt->expr)) {
-                    return true;
-                }
-
-                return true;
+            if ($expr === null) {
+                return 'swallowing';
             }
+            if ($this->isIntentionalTypedFallback($expr)) {
+                return 'ok';
+            }
+            if ($this->isNullLiteral($expr)) {
+                return 'swallowing';
+            }
+            if ($this->isFallbackExpr($expr)) {
+                return 'graceful';
+            }
+
+            return 'swallowing';
         }
 
-        return false;
+        return 'ok';
+    }
+
+    /**
+     * A return expression that produces an alternative value (method/function
+     * call, static call, or object construction): the catch recovers with a
+     * real fallback instead of silently discarding the error.
+     */
+    private function isFallbackExpr(Node $expr): bool
+    {
+        return $expr instanceof Expr\MethodCall
+            || $expr instanceof Expr\NullsafeMethodCall
+            || $expr instanceof Expr\StaticCall
+            || $expr instanceof Expr\FuncCall
+            || $expr instanceof Expr\New_;
     }
 
     private function isNullLiteral(Node $expr): bool

@@ -132,6 +132,186 @@ PHP);
     }
 
     // -------------------------------------------------------------------------
+    // graceful_degradation
+    // -------------------------------------------------------------------------
+
+    public function test_catch_returning_method_call_is_graceful_degradation(): void
+    {
+        $file = $this->createTempFile('GracefulMethod.php', <<<'PHP'
+<?php
+namespace App;
+class GracefulMethod {
+    public function execute(): mixed {
+        try {
+            return doRiskyThing();
+        } catch (\Exception $e) {
+            return $this->fallback();
+        }
+    }
+    private function fallback(): mixed { return null; }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $graceful = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertNotEmpty($graceful, 'return $this->fallback() should be graceful_degradation');
+        $this->assertSame('App\\GracefulMethod::execute', $graceful[0]['nodeId']);
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertEmpty($swallowed, 'Should not also be flagged as exception_swallowing');
+    }
+
+    public function test_catch_returning_new_object_is_graceful_degradation(): void
+    {
+        $file = $this->createTempFile('GracefulNew.php', <<<'PHP'
+<?php
+namespace App;
+class GracefulNew {
+    public function load(): mixed {
+        try {
+            return loadFromRemote();
+        } catch (\Exception $e) {
+            return new \stdClass();
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $graceful = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertNotEmpty($graceful, 'return new Foo() should be graceful_degradation');
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertEmpty($swallowed);
+    }
+
+    public function test_empty_catch_is_still_exception_swallowing(): void
+    {
+        $file = $this->createTempFile('EmptySwallow.php', <<<'PHP'
+<?php
+namespace App;
+class EmptySwallow {
+    public function run(): void {
+        try {
+            doSomething();
+        } catch (\Exception $e) {
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertNotEmpty($swallowed, 'Empty catch should be exception_swallowing');
+
+        $graceful = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertEmpty($graceful);
+    }
+
+    public function test_catch_return_null_without_declared_type_is_swallowing(): void
+    {
+        $file = $this->createTempFile('ReturnNullNoType.php', <<<'PHP'
+<?php
+namespace App;
+class ReturnNullNoType {
+    public function find() {
+        try {
+            return fetchObject();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertNotEmpty($swallowed, 'return null without declared type should be exception_swallowing');
+    }
+
+    public function test_catch_with_multiple_statements_produces_no_swallowing_or_graceful_finding(): void
+    {
+        $file = $this->createTempFile('MultiStatement.php', <<<'PHP'
+<?php
+namespace App;
+class MultiStatement {
+    public function run(): void {
+        try {
+            doSomething();
+        } catch (\Exception $e) {
+            log($e->getMessage());
+            return;
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $graceful  = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertEmpty($swallowed, 'Multi-statement catch should not be flagged as swallowing');
+        $this->assertEmpty($graceful,  'Multi-statement catch should not be flagged as graceful_degradation');
+    }
+
+    public function test_catch_returning_plain_variable_is_swallowing(): void
+    {
+        $file = $this->createTempFile('PlainVarReturn.php', <<<'PHP'
+<?php
+namespace App;
+class PlainVarReturn {
+    public function run(): string {
+        $fallback = 'default';
+        try {
+            return doSomething();
+        } catch (\Exception $e) {
+            return $fallback;
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        // Returning a plain variable is not an active recovery (no call/new), so
+        // it stays conservatively classified as swallowing, not graceful.
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertNotEmpty($swallowed, 'return $var should be exception_swallowing, not graceful');
+
+        $graceful = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertEmpty($graceful);
+    }
+
+    public function test_catch_returning_static_call_is_graceful_degradation(): void
+    {
+        $file = $this->createTempFile('StaticCallReturn.php', <<<'PHP'
+<?php
+namespace App;
+class StaticCallReturn {
+    public function run(): mixed {
+        try {
+            return doSomething();
+        } catch (\Exception $e) {
+            return Helper::recover();
+        }
+    }
+}
+PHP);
+
+        $findings = $this->scanFile($file);
+
+        $graceful = array_values(array_filter($findings, fn($f) => $f['type'] === 'graceful_degradation'));
+        $this->assertNotEmpty($graceful, 'return Helper::recover() (static call) should be graceful_degradation');
+
+        $swallowed = array_values(array_filter($findings, fn($f) => $f['type'] === 'exception_swallowing'));
+        $this->assertEmpty($swallowed);
+    }
+
+    // -------------------------------------------------------------------------
     // resource_leak
     // -------------------------------------------------------------------------
 

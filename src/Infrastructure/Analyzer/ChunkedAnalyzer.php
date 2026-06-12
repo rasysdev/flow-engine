@@ -197,21 +197,4 @@ final class ChunkedAnalyzer
         
         file_put_contents($snapshotFile, json_encode($data, JSON_PRETTY_PRINT));
     }
-
-    /**
-     * Estima tempo restante baseado em velocidade atual.
-     * 
-     * @internal 
-     */
-    public function estimateTimeRemaining(int $filesProcessed, int $totalFiles, float $elapsedSeconds): float
-    {
-        if ($filesProcessed === 0) {
-            return 0;
-        }
-        
-        $rate = $filesProcessed / $elapsedSeconds; // files/second
-        $filesRemaining = $totalFiles - $filesProcessed;
-        
-        return $filesRemaining / $rate;
-    }
 }

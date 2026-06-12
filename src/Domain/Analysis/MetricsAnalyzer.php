@@ -35,7 +35,7 @@ final class MetricsAnalyzer
         $fanIn = $this->fanInCache[$nodeId] ?? 0;
         $fanOut = $this->fanOutCache[$nodeId] ?? 0;
         $blastRadius = $this->calculateBlastRadius($nodeId);
-        $riskLevel = NodeMetrics::calculateRiskLevel($fanIn, $fanOut);
+        $riskLevel = NodeMetrics::calculateRiskLevel($fanIn, $fanOut, $blastRadius);
 
         return new NodeMetrics(
             nodeId: $nodeId,

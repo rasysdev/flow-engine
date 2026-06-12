@@ -17,8 +17,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/rborges/flow-engine/actions/workflows/ci.yml"><img src="https://github.com/rborges/flow-engine/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-64b6ac">
-  <img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4">
+  <img alt="PHP 8.3+" src="https://img.shields.io/badge/PHP-8.3%2B-777bb4">
   <img alt="MCP server" src="https://img.shields.io/badge/MCP-server-d6a84f">
   <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ed">
   <img alt="Local first" src="https://img.shields.io/badge/local--first-no%20required%20API%20key-e06c5f">
@@ -86,8 +87,8 @@ Use it to:
 
 Choose one setup:
 
-- **Windows, easiest path:** install Git, PHP 8.2+, Composer, and use PowerShell.
-- **Linux/macOS:** install Git, PHP 8.2+, Composer, and use your shell.
+- **Windows, easiest path:** install Git, PHP 8.3+, Composer, and use PowerShell.
+- **Linux/macOS:** install Git, PHP 8.3+, Composer, and use your shell.
 - **Docker only:** install Docker Desktop or Docker Engine, then build the image locally.
 
 Flow Engine is not required to be installed inside the project you are analyzing. Clone it once, then run commands against any local repository.

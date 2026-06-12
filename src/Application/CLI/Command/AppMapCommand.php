@@ -6,9 +6,8 @@ use FlowEngine\Application\AppMap\ApplicationMapBuilder;
 use FlowEngine\Application\AppMap\OpenApiContractParser;
 use FlowEngine\Application\AppMap\ServiceInfo;
 use FlowEngine\Bootstrap\Container;
+use FlowEngine\Bootstrap\InfraServices;
 use FlowEngine\Console\ConsoleIO;
-use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
-use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
 
 final class AppMapCommand implements Command
 {
@@ -94,35 +93,7 @@ final class AppMapCommand implements Command
 
     private function loadCatalogEntries(string $catalogPath): array
     {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath);
-        if ($catalog === null) {
-            return [];
-        }
-
-        $entries = $catalog['entries'];
-        $docker = (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
-        $hostnamesByService = [];
-        foreach ($docker['serviceMappings'] as $mapping) {
-            if (!is_array($mapping)) {
-                continue;
-            }
-            $service = (string) ($mapping['service'] ?? '');
-            if ($service === '') {
-                continue;
-            }
-            $hostnamesByService[$service] = is_array($mapping['hostnames'] ?? null)
-                ? array_values(array_filter($mapping['hostnames'], 'is_string'))
-                : [];
-        }
-
-        return array_map(function (array $entry) use ($hostnamesByService): array {
-            $serviceName = $entry['name'] ?? basename(rtrim($entry['path'], DIRECTORY_SEPARATOR));
-            $entry['hostnames'] = array_values(array_unique(array_merge(
-                $entry['hostnames'] ?? [],
-                $hostnamesByService[$serviceName] ?? []
-            )));
-            return $entry;
-        }, $entries);
+        return (new InfraServices())->resolveCatalogServices()->enrichedEntries($catalogPath);
     }
 
     /**

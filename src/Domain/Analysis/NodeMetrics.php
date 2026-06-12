@@ -21,28 +21,38 @@ final readonly class NodeMetrics
 
     /**
      * Calcula nível de risco baseado nas métricas.
-     * 
-     * Critérios:
+     *
+     * Critérios base:
      * - CRITICAL: fan-in > 20 OU fan-out > 15
      * - HIGH: fan-in > 10 OU fan-out > 8
      * - MEDIUM: fan-in > 5 OU fan-out > 5
      * - LOW: demais casos
+     *
+     * Cap: blastRadius conta os dependentes transitivos do nó (todos que o
+     * alcançam pela cadeia de chamadas). Quando fanIn === 0 e blastRadius === 0
+     * não há chamador direto nem dependente transitivo, então alterar o nó não
+     * pode quebrar ninguém e CRITICAL é rebaixado para HIGH. As duas condições
+     * são checadas em conjunto de propósito: blastRadius null significa "não
+     * informado pelo chamador" e nesse caso o cap NÃO é aplicado — não confundir
+     * blast desconhecido com blast zero.
      */
-    public static function calculateRiskLevel(int $fanIn, int $fanOut): string
+    public static function calculateRiskLevel(int $fanIn, int $fanOut, ?int $blastRadius = null): string
     {
-        if ($fanIn > 20 || $fanOut > 15) {
-            return 'CRITICAL';
-        }
+        $level = match (true) {
+            $fanIn > 20 || $fanOut > 15 => 'CRITICAL',
+            $fanIn > 10 || $fanOut > 8 => 'HIGH',
+            $fanIn > 5 || $fanOut > 5 => 'MEDIUM',
+            default => 'LOW',
+        };
 
-        if ($fanIn > 10 || $fanOut > 8) {
+        // No direct callers and nothing depending on it transitively: changing
+        // this node cannot break anyone, so a high fan-out alone must not flag it
+        // CRITICAL. blastRadius === null means "unknown", so the cap stays off.
+        if ($level === 'CRITICAL' && $fanIn === 0 && $blastRadius === 0) {
             return 'HIGH';
         }
 
-        if ($fanIn > 5 || $fanOut > 5) {
-            return 'MEDIUM';
-        }
-
-        return 'LOW';
+        return $level;
     }
 
     /**

@@ -12,8 +12,7 @@ use FlowEngine\Application\AppMap\ServiceInfo;
 use FlowEngine\Application\DTO\EdgeDTO;
 use FlowEngine\Application\DTO\NodeDTO;
 use FlowEngine\Bootstrap\Container;
-use FlowEngine\Infrastructure\Config\FlowServiceCatalogLoader;
-use FlowEngine\Infrastructure\Docker\DockerTopologyAnalyzer;
+use FlowEngine\Bootstrap\InfraServices;
 use RuntimeException;
 use Throwable;
 
@@ -438,7 +437,9 @@ final class ReadOnlyApi
             return $this->error(400, 'Missing required query param: catalog');
         }
 
-        $entries = $this->catalogEntriesFromPath($catalog);
+        $resolved = (new InfraServices())->resolveCatalogServices()
+            ->enrichedEntriesWithDocker($catalog, $this->projectPath);
+        $entries = $resolved['entries'];
         if (count($entries) < 2) {
             return $this->error(400, 'Catalog must include at least 2 services with valid paths');
         }
@@ -446,7 +447,7 @@ final class ReadOnlyApi
         $services = $this->buildServices($entries);
         $appmap = (new ApplicationMapBuilder())->build($services);
 
-        $docker = $this->dockerTopologyForEntries($catalog, $entries);
+        $docker = $resolved['docker'];
         $deployment = $this->buildDeploymentPayload($appmap, $docker, $catalog);
 
         return $this->ok([
@@ -966,37 +967,7 @@ final class ReadOnlyApi
      */
     private function catalogEntriesFromPath(string $catalogPath): array
     {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath, $this->projectPath);
-        if ($catalog === null) {
-            return [];
-        }
-
-        $entries = $catalog['entries'];
-        $docker = (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
-        $hostnamesByService = [];
-        foreach ($docker['serviceMappings'] as $mapping) {
-            if (!is_array($mapping)) {
-                continue;
-            }
-
-            $service = (string) ($mapping['service'] ?? '');
-            if ($service === '') {
-                continue;
-            }
-
-            $hostnamesByService[$service] = is_array($mapping['hostnames'] ?? null)
-                ? array_values(array_filter($mapping['hostnames'], 'is_string'))
-                : [];
-        }
-
-        return array_map(function (array $entry) use ($hostnamesByService): array {
-            $serviceName = $entry['name'] ?? basename(rtrim($entry['path'], DIRECTORY_SEPARATOR));
-            $entry['hostnames'] = array_values(array_unique(array_merge(
-                $entry['hostnames'] ?? [],
-                $hostnamesByService[$serviceName] ?? []
-            )));
-            return $entry;
-        }, $entries);
+        return (new InfraServices())->resolveCatalogServices()->enrichedEntries($catalogPath, $this->projectPath);
     }
 
     /**
@@ -1036,39 +1007,6 @@ final class ReadOnlyApi
         }
 
         return $services;
-    }
-
-    /**
-     * @param array<int, array{
-     *   path: string,
-     *   name: string|null,
-     *   hostnames: string[],
-     *   contractEndpoints: array<int, array{method: string, path: string, summary: string}>|null,
-     *   docker: array{
-     *     composeFiles: string[],
-     *     dockerfiles: string[],
-     *     envFiles: string[],
-     *     serviceNames: string[]
-     *   }
-     * }> $entries
-     * @return array<string, mixed>
-     */
-    private function dockerTopologyForEntries(string $catalogPath, array $entries): array
-    {
-        $catalog = (new FlowServiceCatalogLoader())->load($catalogPath, $this->projectPath);
-        if ($catalog === null) {
-            return [
-                'detectedComposeFiles' => [],
-                'dockerfiles' => [],
-                'environmentFiles' => [],
-                'containers' => [],
-                'networks' => [],
-                'serviceMappings' => [],
-                'warnings' => [],
-            ];
-        }
-
-        return (new DockerTopologyAnalyzer())->analyze($catalog['baseDir'], $entries);
     }
 
     /**

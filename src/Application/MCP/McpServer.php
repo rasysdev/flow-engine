@@ -11,6 +11,7 @@ use FlowEngine\Application\ProjectMap\ProjectMapBuilder;
 use FlowEngine\Bootstrap\CatalogServiceBuilder;
 use FlowEngine\Bootstrap\ConfigResolution;
 use FlowEngine\Bootstrap\Container;
+use FlowEngine\Bootstrap\InfraServices;
 use FlowEngine\Bootstrap\LanguageSupportCatalog;
 use FlowEngine\Domain\Contracts\Flow as FlowContract;
 use FlowEngine\Domain\Flow\FlowTracer;
@@ -300,7 +301,7 @@ final class McpServer
                     $scope = $this->resolveScope($args);
                     $mode = $this->normalizeMode($args['mode'] ?? 'summary');
                     $sections = $this->normalizeInfraSections($args['sections'] ?? ['all']);
-                    $builder = new InfraMapBuilder();
+                    $builder = (new InfraServices())->infraMapBuilder();
 
                     $jsonFlags = $mode === 'summary'
                         ? JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
