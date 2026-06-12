@@ -58,7 +58,7 @@ final class DoctorCommand implements Command
                 );
             }
 
-            $checks[] = $this->check('php_version', version_compare(PHP_VERSION, '8.2.0', '>=') ? 'ok' : 'warn', 'PHP ' . PHP_VERSION);
+            $checks[] = $this->check('php_version', version_compare(PHP_VERSION, '8.3.0', '>=') ? 'ok' : 'warn', 'PHP ' . PHP_VERSION);
         } catch (\Throwable $e) {
             $checks[] = $this->check('config_valid', 'fail', $e->getMessage());
         }
