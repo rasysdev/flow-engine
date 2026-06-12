@@ -57,34 +57,50 @@ final class ResolveCatalogServicesTest extends TestCase
         $this->assertSame([], $result);
     }
 
-    public function test_docker_topology_returns_raw_analysis_for_given_entries(): void
+    public function test_enriched_entries_with_docker_loads_catalog_once_and_returns_both(): void
     {
-        $entries = [['path' => '/srv/a']];
-        $docker = ['containers' => [['name' => 'web']], 'serviceMappings' => []];
+        $catalog = [
+            'baseDir' => '/srv',
+            'entries' => [
+                ['path' => '/srv/a', 'name' => 'a', 'hostnames' => ['keep.local']],
+                ['path' => '/srv/b', 'name' => 'b'],
+            ],
+        ];
+        $docker = [
+            'containers' => [['name' => 'web']],
+            'serviceMappings' => [
+                ['service' => 'a', 'hostnames' => ['a1.local']],
+            ],
+        ];
 
-        $loader = $this->createStub(CatalogLoader::class);
-        $loader->method('load')->willReturn(['baseDir' => '/srv', 'entries' => []]);
+        $loader = $this->createMock(CatalogLoader::class);
+        $loader->expects($this->once())->method('load')
+            ->with('/cat.json', null)
+            ->willReturn($catalog);
         $reader = $this->createMock(DockerTopologyReader::class);
         $reader->expects($this->once())->method('analyze')
-            ->with('/srv', $entries)
+            ->with('/srv', $catalog['entries'])
             ->willReturn($docker);
 
-        $result = (new ResolveCatalogServices($loader, $reader))->dockerTopology('/cat.json', $entries);
+        $result = (new ResolveCatalogServices($loader, $reader))->enrichedEntriesWithDocker('/cat.json');
 
-        $this->assertSame($docker, $result);
+        $this->assertSame(['keep.local', 'a1.local'], $result['entries'][0]['hostnames']);
+        $this->assertSame('b', $result['entries'][1]['name']);
+        $this->assertSame($docker, $result['docker']);
     }
 
-    public function test_docker_topology_returns_empty_shape_when_catalog_is_invalid(): void
+    public function test_enriched_entries_with_docker_returns_empty_shape_when_catalog_is_invalid(): void
     {
         $loader = $this->createStub(CatalogLoader::class);
         $loader->method('load')->willReturn(null);
         $reader = $this->createMock(DockerTopologyReader::class);
         $reader->expects($this->never())->method('analyze');
 
-        $result = (new ResolveCatalogServices($loader, $reader))->dockerTopology('/missing.json', [['path' => '/x']]);
+        $result = (new ResolveCatalogServices($loader, $reader))->enrichedEntriesWithDocker('/missing.json');
 
-        $this->assertSame([], $result['containers']);
-        $this->assertSame([], $result['serviceMappings']);
-        $this->assertArrayHasKey('warnings', $result);
+        $this->assertSame([], $result['entries']);
+        $this->assertSame([], $result['docker']['containers']);
+        $this->assertSame([], $result['docker']['serviceMappings']);
+        $this->assertArrayHasKey('warnings', $result['docker']);
     }
 }

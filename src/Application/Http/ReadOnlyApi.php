@@ -437,7 +437,9 @@ final class ReadOnlyApi
             return $this->error(400, 'Missing required query param: catalog');
         }
 
-        $entries = $this->catalogEntriesFromPath($catalog);
+        $resolved = (new InfraServices())->resolveCatalogServices()
+            ->enrichedEntriesWithDocker($catalog, $this->projectPath);
+        $entries = $resolved['entries'];
         if (count($entries) < 2) {
             return $this->error(400, 'Catalog must include at least 2 services with valid paths');
         }
@@ -445,7 +447,7 @@ final class ReadOnlyApi
         $services = $this->buildServices($entries);
         $appmap = (new ApplicationMapBuilder())->build($services);
 
-        $docker = $this->dockerTopologyForEntries($catalog, $entries);
+        $docker = $resolved['docker'];
         $deployment = $this->buildDeploymentPayload($appmap, $docker, $catalog);
 
         return $this->ok([
@@ -1005,26 +1007,6 @@ final class ReadOnlyApi
         }
 
         return $services;
-    }
-
-    /**
-     * @param array<int, array{
-     *   path: string,
-     *   name: string|null,
-     *   hostnames: string[],
-     *   contractEndpoints: array<int, array{method: string, path: string, summary: string}>|null,
-     *   docker: array{
-     *     composeFiles: string[],
-     *     dockerfiles: string[],
-     *     envFiles: string[],
-     *     serviceNames: string[]
-     *   }
-     * }> $entries
-     * @return array<string, mixed>
-     */
-    private function dockerTopologyForEntries(string $catalogPath, array $entries): array
-    {
-        return (new InfraServices())->resolveCatalogServices()->dockerTopology($catalogPath, $entries, $this->projectPath);
     }
 
     /**

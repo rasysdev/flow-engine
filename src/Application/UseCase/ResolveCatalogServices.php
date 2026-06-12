@@ -28,6 +28,42 @@ final class ResolveCatalogServices
 
         $entries = $catalog['entries'];
         $docker = $this->dockerTopologyReader->analyze($catalog['baseDir'], $entries);
+
+        return $this->enrichEntries($entries, $docker);
+    }
+
+    /**
+     * Load the catalog and run the Docker analysis once, returning both the
+     * enriched entries and the raw Docker topology. Callers that need both
+     * (e.g. the deployment map) must use this instead of calling
+     * enrichedEntries() and a separate Docker analysis back to back, which
+     * would parse the same catalog and recompute the topology twice.
+     *
+     * @return array{entries: array<int, array<string, mixed>>, docker: array<string, mixed>}
+     */
+    public function enrichedEntriesWithDocker(string $catalogPath, ?string $projectPath = null): array
+    {
+        $catalog = $this->catalogLoader->load($catalogPath, $projectPath);
+        if ($catalog === null) {
+            return ['entries' => [], 'docker' => $this->emptyDockerTopology()];
+        }
+
+        $entries = $catalog['entries'];
+        $docker = $this->dockerTopologyReader->analyze($catalog['baseDir'], $entries);
+
+        return ['entries' => $this->enrichEntries($entries, $docker), 'docker' => $docker];
+    }
+
+    /**
+     * Merge the hostnames discovered in the Docker topology into each entry,
+     * preserving the entry shape.
+     *
+     * @param array<int, array<string, mixed>> $entries
+     * @param array<string, mixed> $docker
+     * @return array<int, array<string, mixed>>
+     */
+    private function enrichEntries(array $entries, array $docker): array
+    {
         $hostnamesByService = $this->hostnamesByService($docker);
 
         return array_map(function (array $entry) use ($hostnamesByService): array {
@@ -42,28 +78,19 @@ final class ResolveCatalogServices
     }
 
     /**
-     * Load a catalog and return the raw Docker topology for the given entries.
-     * Returns an empty topology shape when the catalog is invalid.
-     *
-     * @param array<int, array<string, mixed>> $entries
      * @return array<string, mixed>
      */
-    public function dockerTopology(string $catalogPath, array $entries, ?string $projectPath = null): array
+    private function emptyDockerTopology(): array
     {
-        $catalog = $this->catalogLoader->load($catalogPath, $projectPath);
-        if ($catalog === null) {
-            return [
-                'detectedComposeFiles' => [],
-                'dockerfiles' => [],
-                'environmentFiles' => [],
-                'containers' => [],
-                'networks' => [],
-                'serviceMappings' => [],
-                'warnings' => [],
-            ];
-        }
-
-        return $this->dockerTopologyReader->analyze($catalog['baseDir'], $entries);
+        return [
+            'detectedComposeFiles' => [],
+            'dockerfiles' => [],
+            'environmentFiles' => [],
+            'containers' => [],
+            'networks' => [],
+            'serviceMappings' => [],
+            'warnings' => [],
+        ];
     }
 
     /**
