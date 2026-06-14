@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1
 
-FROM composer:2 AS deps
+FROM composer:2.9.5 AS deps
 WORKDIR /app
 
 COPY composer.json ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress
+RUN composer config platform.php 8.3.31 \
+    && composer install --no-dev --prefer-dist --no-interaction --no-progress \
+    && composer config --unset platform.php
 
 COPY bin/ bin/
 COPY src/ src/
@@ -12,7 +14,7 @@ COPY schema/ schema/
 
 RUN composer dump-autoload --no-dev --optimize
 
-FROM php:8.2-cli
+FROM php:8.3.31-cli
 WORKDIR /flow-engine
 
 # Store cache/events/sessions outside the analyzed project so `/workspace` can be mounted read-only.
