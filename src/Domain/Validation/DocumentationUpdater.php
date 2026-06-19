@@ -23,6 +23,10 @@ final class DocumentationUpdater
      */
     public function update(ValidationReport $report): string
     {
+        if (!is_file($report->docsFile) || !is_readable($report->docsFile)) {
+            throw new \RuntimeException("Failed to read {$report->docsFile}");
+        }
+
         $content = file_get_contents($report->docsFile);
 
         if ($content === false) {
