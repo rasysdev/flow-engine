@@ -45,6 +45,11 @@ services:
     environment:
       APP_ENV: production
       SECRET_TOKEN: not-returned
+    ports:
+      - 8080:80
+    volumes:
+      - ./public:/var/www/html:ro
+      - named-cache:/cache
     networks:
       appnet:
         aliases:
@@ -117,6 +122,8 @@ YAML);
         }
 
         $this->assertSame('unless-stopped', $containerByName['svc-a']['restart']);
+        $this->assertSame(['8080:80'], $containerByName['svc-a']['ports']);
+        $this->assertSame(['./public:/var/www/html:ro', 'named-cache:/cache'], $containerByName['svc-a']['volumes']);
         $this->assertSame(['APP_ENV', 'SECRET_TOKEN'], $containerByName['svc-a']['environmentKeys']);
         $this->assertSame(['STAGING_FLAG', 'WORKER_COUNT'], $containerByName['svc-b']['environmentKeys']);
         $this->assertArrayHasKey('healthcheck', $containerByName['svc-a']);
