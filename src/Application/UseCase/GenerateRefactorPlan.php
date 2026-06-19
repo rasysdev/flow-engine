@@ -132,6 +132,8 @@ final class GenerateRefactorPlan
 
     private function createNoLLMPlan(string $nodeId, int $riskScore, string $riskLevel, array $riskFactors, \FlowEngine\Application\DTO\SafetyAssessmentDTO $safety): RefactorPlanDTO
     {
+        $steps = $this->createNoLLMSteps($nodeId, $riskLevel, $safety);
+
         return new RefactorPlanDTO(
             nodeId: $nodeId,
             detectionReason: 'LLM provider is not configured. Configure ANTHROPIC_API_KEY, OPENAI_API_KEY, or OLLAMA_HOST + OLLAMA_MODEL to get AI-generated plans.',
@@ -139,16 +141,37 @@ final class GenerateRefactorPlan
             riskScore: $riskScore,
             riskFactors: $riskFactors,
             prerequisites: [],
-            steps: [],
+            steps: $steps,
             testingGuidance: array_map(fn(string $r) => $r, $safety->recommendations),
-            estimatedComplexity: 0,
+            estimatedComplexity: max(1, min(10, 1 + intdiv($safety->affectedNodes, 2))),
             metadata: [
                 'tokensUsed' => 0,
                 'grounding' => ['valid' => true, 'invalidReferences' => []],
                 'trivial' => false,
                 'llmConfigured' => false,
+                'deterministicFallback' => true,
             ]
         );
+    }
+
+    /**
+     * @return RefactorStepDTO[]
+     */
+    private function createNoLLMSteps(string $nodeId, string $riskLevel, \FlowEngine\Application\DTO\SafetyAssessmentDTO $safety): array
+    {
+        $affectedNodes = array_values(array_unique(array_merge([$nodeId], $safety->potentialOrphans)));
+
+        return [
+            new RefactorStepDTO(
+                order: 1,
+                action: 'Review graph impact and verify local tests before changing the node',
+                target: $nodeId,
+                rationale: 'LLM provider is not configured, so Flow Engine generated a deterministic local safety step from graph analysis.',
+                priority: $riskLevel,
+                affectedNodes: $affectedNodes,
+                tests: []
+            ),
+        ];
     }
 
     private function isTrivialNode(string $riskLevel, int $affectedNodes, array $cycles, array $violations): bool

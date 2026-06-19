@@ -1,0 +1,13 @@
+{
+  "name": "flow-engine/simple-project-fixture",
+  "description": "Small PHP fixture for Flow Engine integration tests",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "Fixture\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.3"
+  }
+}

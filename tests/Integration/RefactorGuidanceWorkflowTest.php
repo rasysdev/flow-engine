@@ -19,10 +19,7 @@ class RefactorGuidanceWorkflowTest extends TestCase
     protected function setUp(): void
     {
         $this->fixtureDir = __DIR__ . '/../fixtures/simple-project';
-
-        if (!is_dir($this->fixtureDir)) {
-            $this->markTestSkipped('Fixture directory not found: ' . $this->fixtureDir);
-        }
+        $this->assertDirectoryExists($this->fixtureDir);
 
         $this->planLabel = 'guidance-test-' . time();
     }
@@ -49,17 +46,7 @@ class RefactorGuidanceWorkflowTest extends TestCase
         $container->analyzeProject()->execute();
 
         // 1. Find a node to test with
-        $nodes = $container->getNodes()->execute();
-
-        if (empty($nodes)) {
-            $this->markTestSkipped('No nodes found in fixture project');
-        }
-
-        $nodeId = $nodes[0]['id'] ?? null;
-
-        if ($nodeId === null) {
-            $this->markTestSkipped('No valid node ID found');
-        }
+        $nodeId = $this->firstFixtureNodeId($container);
 
         // 2. Generate and save a plan
         $plan = $container->generateRefactorPlan()->execute($nodeId);
@@ -68,10 +55,7 @@ class RefactorGuidanceWorkflowTest extends TestCase
 
         $container->saveRefactorPlan()->execute($this->planLabel, $plan);
 
-        // 3. Get guidance for step 1 (if steps exist, otherwise skip)
-        if (empty($plan->steps)) {
-            $this->markTestSkipped('Plan has no steps (trivial node); skipping guidance workflow.');
-        }
+        $this->assertNotEmpty($plan->steps, 'Fixture node must produce at least one refactor step.');
 
         $firstStepOrder = $plan->steps[0]->order;
 
@@ -139,22 +123,12 @@ class RefactorGuidanceWorkflowTest extends TestCase
         $container = new Container($this->fixtureDir);
         $container->analyzeProject()->execute();
 
-        $nodes = $container->getNodes()->execute();
-        if (empty($nodes)) {
-            $this->markTestSkipped('No nodes found in fixture project');
-        }
-
-        $nodeId = $nodes[0]['id'] ?? null;
-        if ($nodeId === null) {
-            $this->markTestSkipped('No valid node ID found');
-        }
+        $nodeId = $this->firstFixtureNodeId($container);
 
         $plan = $container->generateRefactorPlan()->execute($nodeId);
         $container->saveRefactorPlan()->execute($this->planLabel, $plan);
 
-        if (empty($plan->steps)) {
-            $this->markTestSkipped('Plan has no steps (trivial node).');
-        }
+        $this->assertNotEmpty($plan->steps, 'Fixture node must produce at least one refactor step.');
 
         $firstStepOrder = $plan->steps[0]->order;
         $guidance = $container->getRefactorGuidance()->execute($this->planLabel, $firstStepOrder);
@@ -172,22 +146,12 @@ class RefactorGuidanceWorkflowTest extends TestCase
         $container = new Container($this->fixtureDir);
         $container->analyzeProject()->execute();
 
-        $nodes = $container->getNodes()->execute();
-        if (empty($nodes)) {
-            $this->markTestSkipped('No nodes found in fixture project');
-        }
-
-        $nodeId = $nodes[0]['id'] ?? null;
-        if ($nodeId === null) {
-            $this->markTestSkipped('No valid node ID found');
-        }
+        $nodeId = $this->firstFixtureNodeId($container);
 
         $plan = $container->generateRefactorPlan()->execute($nodeId);
         $container->saveRefactorPlan()->execute($this->planLabel, $plan);
 
-        if (empty($plan->steps)) {
-            $this->markTestSkipped('Plan has no steps (trivial node).');
-        }
+        $this->assertNotEmpty($plan->steps, 'Fixture node must produce at least one refactor step.');
 
         $firstStepOrder = $plan->steps[0]->order;
         $validation = $container->validateRefactorStep()->execute($this->planLabel, $firstStepOrder);
@@ -205,20 +169,30 @@ class RefactorGuidanceWorkflowTest extends TestCase
         $container = new Container($this->fixtureDir);
         $container->analyzeProject()->execute();
 
-        $nodes = $container->getNodes()->execute();
-        if (empty($nodes)) {
-            $this->markTestSkipped('No nodes found in fixture project');
-        }
-
-        $nodeId = $nodes[0]['id'] ?? null;
-        if ($nodeId === null) {
-            $this->markTestSkipped('No valid node ID found');
-        }
+        $nodeId = $this->firstFixtureNodeId($container);
 
         $plan = $container->generateRefactorPlan()->execute($nodeId);
         $container->saveRefactorPlan()->execute($this->planLabel, $plan);
 
         $this->expectException(\Throwable::class);
         $container->getRefactorGuidance()->execute($this->planLabel, 9999);
+    }
+
+    private function firstFixtureNodeId(Container $container): string
+    {
+        $nodes = $container->getNodes()->execute();
+        $this->assertNotEmpty($nodes, 'Fixture project must expose at least one node.');
+
+        foreach ($nodes as $node) {
+            if (($node->id ?? null) === 'Fixture\\InvoiceService::totalWithTax') {
+                return $node->id;
+            }
+        }
+
+        $nodeId = $nodes[0]->id ?? null;
+        $this->assertIsString($nodeId, 'Fixture project must expose a valid node id.');
+        $this->assertNotSame('', $nodeId, 'Fixture project node id must not be empty.');
+
+        return $nodeId;
     }
 }

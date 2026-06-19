@@ -78,7 +78,7 @@ REFACTORING WORKFLOW
   refactor-safety <path> --node=<Class::method>   Assess refactoring safety
   refactor-execute <path> --plan=<label> --step=<N> [--mark-done]
                                                   Get guidance for refactor step
-  refactor-validate <path> --plan=<label> --step=<N>
+  refactor-validate <path> --plan=<label> --step=<N> [--format=json|markdown]
                                                   Validate refactor step completion
   refactor-pr <path> --plan=<label> [--publish]   Generate PR from refactor plan
 
@@ -491,7 +491,7 @@ Example:
 HELP,
 
             'refactor-validate' => <<<'HELP'
-flow refactor-validate <project_path> --plan=<label> --step=<N>
+flow refactor-validate <project_path> --plan=<label> --step=<N> [--format=json|markdown]
 
 Validate that a refactor step was completed correctly.
 
@@ -501,6 +501,7 @@ Arguments:
 Options:
   --plan=<label>    Plan label (required)
   --step=<N>        Step number (required, 1-based)
+  --format=<fmt>    Output format: json (default) or markdown
 
 Exit codes:
   0 - Validation passed
@@ -508,6 +509,7 @@ Exit codes:
 
 Example:
   php bin/engine.php refactor-validate . --plan=user-refactor --step=1
+  php bin/engine.php refactor-validate . --plan=user-refactor --step=1 --format=markdown
 
 HELP,
 

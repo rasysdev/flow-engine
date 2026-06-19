@@ -2,6 +2,7 @@
 
 namespace FlowEngine\Application\CLI\Command;
 
+use FlowEngine\AI\Export\MarkdownFormatter;
 use FlowEngine\Bootstrap\Container;
 use FlowEngine\Console\ConsoleIO;
 
@@ -22,10 +23,11 @@ final class RefactorValidateCommand implements Command
         $projectPath = $argv[2] ?? null;
         $planLabel = $this->extractOption($argv, '--plan');
         $step = $this->extractOption($argv, '--step');
+        $format = $this->extractOption($argv, '--format') ?? 'json';
 
         if (!$projectPath || !$planLabel || $step === null) {
             $this->io->error(
-                'Usage: flow refactor-validate <project_path> --plan=<label> --step=<N>'
+                'Usage: flow refactor-validate <project_path> --plan=<label> --step=<N> [--format=json|markdown]'
             );
             return;
         }
@@ -37,13 +39,23 @@ final class RefactorValidateCommand implements Command
             return;
         }
 
+        if (!in_array($format, ['json', 'markdown'], true)) {
+            $this->io->error('Invalid format. Use --format=json or --format=markdown');
+            return;
+        }
+
         try {
             $container = new Container($projectPath);
             $container->analyzeProject()->execute();
 
             $validation = $container->validateRefactorStep()->execute($planLabel, $stepNumber);
 
-            $this->io->json($validation->toArray());
+            if ($format === 'markdown') {
+                $formatter = new MarkdownFormatter();
+                echo $formatter->formatRefactorValidation($validation);
+            } else {
+                $this->io->json($validation->toArray());
+            }
 
             if (!$validation->passed) {
                 exit(1);
