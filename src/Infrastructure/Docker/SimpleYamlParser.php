@@ -170,7 +170,7 @@ final class SimpleYamlParser
 
     private function looksLikeMappingEntry(string $line): bool
     {
-        return preg_match('/^[^:\'"]+\s*:/', $line) === 1;
+        return preg_match('/^[A-Za-z0-9_.-]+\s*:(?:\s|$)/', $line) === 1;
     }
 
     /**

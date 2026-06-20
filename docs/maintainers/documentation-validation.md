@@ -1,8 +1,8 @@
-# Documentation Validation
+# Documentation Validation Fixture
 
-This file is used by the `validate-docs` maintainer command. It provides canonical source references that are expected to exist in this repository.
+This file is an internal fixture for `ValidateDocsCommand`.
 
-Most users do not need this file. It is kept under `docs/maintainers` so public documentation can stay focused on using Flow Engine.
+The command is not registered in the public CLI, so this page is not linked from the public documentation index. Keep it under `docs/maintainers` because the command default still points here when the maintainer command is wired manually.
 
 Referenced files:
 

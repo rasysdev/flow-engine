@@ -192,7 +192,7 @@ final class DocumentationValidatorTest extends TestCase
      */
     private function createFakeFlow(array $nodes): Flow
     {
-        $flow = $this->createMock(Flow::class);
+        $flow = $this->createStub(Flow::class);
         $flow->method('nodes')->willReturn($nodes);
         return $flow;
     }

@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "context": {
+    "type": "php"
+  },
+  "scan": {
+    "include": [
+      "src"
+    ],
+    "exclude": [
+      "vendor",
+      ".flow-engine"
+    ],
+    "extensions": [
+      "php"
+    ]
+  }
+}

@@ -17,10 +17,7 @@ class RefactorPlanWorkflowTest extends TestCase
     protected function setUp(): void
     {
         $this->fixtureDir = __DIR__ . '/../fixtures/simple-project';
-
-        if (!is_dir($this->fixtureDir)) {
-            $this->markTestSkipped('Fixture directory not found: ' . $this->fixtureDir);
-        }
+        $this->assertDirectoryExists($this->fixtureDir);
     }
 
     public function testGenerateAndSavePlanForSimpleNode(): void
@@ -32,15 +29,11 @@ class RefactorPlanWorkflowTest extends TestCase
         // Find a simple node (assuming fixture has at least one node)
         $nodes = $container->getNodes()->execute();
 
-        if (empty($nodes)) {
-            $this->markTestSkipped('No nodes found in fixture project');
-        }
+        $this->assertNotEmpty($nodes, 'Fixture project must expose at least one node.');
 
-        $nodeId = $nodes[0]['id'] ?? null;
+        $nodeId = $nodes[0]->id ?? null;
 
-        if ($nodeId === null) {
-            $this->markTestSkipped('No valid node ID found');
-        }
+        $this->assertNotNull($nodeId, 'Fixture project must expose a valid node id.');
 
         // Act: Generate plan
         $plan = $container->generateRefactorPlan()->execute($nodeId);

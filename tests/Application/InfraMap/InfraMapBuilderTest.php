@@ -66,6 +66,8 @@ services:
     environment:
       APP_ENV: production
       SECRET_TOKEN: not-returned
+    volumes:
+      - ./workspace:/workspace:ro
 YAML);
 
         $result = (new InfraMapBuilder(new FileInventoryAnalyzer(), new DockerTopologyAnalyzer(), new CaddyTopologyAnalyzer(), new WebCrawlRulesAnalyzer(), new ScriptTopologyAnalyzer(), new FlowServiceCatalogLoader()))->buildForProject($base, 'full', ['docker']);
@@ -80,6 +82,16 @@ YAML);
             $result['edges']
         );
         $this->assertSame(['APP_ENV', 'SECRET_TOKEN'], $result['docker']['containers'][0]['environmentKeys']);
+        $this->assertSame(['./workspace:/workspace:ro'], $result['docker']['containers'][0]['volumes']);
+        $this->assertContains(
+            [
+                'from' => 'docker-service:app',
+                'to' => 'volume:./workspace:/workspace:ro',
+                'type' => 'mounts_volume',
+                'source' => $base . DIRECTORY_SEPARATOR . 'docker-compose.yml',
+            ],
+            $result['edges']
+        );
     }
 
     private function deleteDirectory(string $path): void

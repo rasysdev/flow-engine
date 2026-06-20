@@ -7,10 +7,11 @@
 node_modules
 outputs
 reports
+/state/
+/workspace/
 tests
 vendor
 *.log
 *.tmp
 *.cache
 .phpunit.result.cache
-

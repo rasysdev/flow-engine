@@ -60,11 +60,15 @@ a local baseline, or integration with AI tooling.
 - `refactor-plan <path> --node=<node>`: graph-backed refactor plan.
 - `refactor-safety <path> --node=<node>`: safety assessment.
 - `refactor-execute <path> --plan=<label> --step=<N>`: local step guidance.
-- `refactor-validate <path> --plan=<label> --step=<N>`: validate step completion.
+- `refactor-validate <path> --plan=<label> --step=<N> [--format=json|markdown]`: validate step completion.
 - `refactor-pr <path> --plan=<label>`: generate local PR text.
 - `remediation-proposals <path>`: generate local remediation proposals.
 - `remediation-approve <path> --plan=<label> --id=<proposal_id>`: mark a proposal approved.
 - `remediation-status <path> --plan=<label>`: inspect approval status.
+
+When no LLM provider is configured, `refactor-plan` still creates a deterministic
+local safety step from graph analysis so `refactor-execute` and
+`refactor-validate` remain usable. Optional LLM providers only enrich the plan.
 
 ## Snapshots And Gates
 
