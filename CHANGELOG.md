@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - Documentation coherence
+
+- Rewrote `docs/configuration.md` to match the real `flow-engine.json` schema (`version`, `context.type`, `scan.include/exclude/extensions`, `architecture.layers` as namespace prefixes, `snapshots.keep`) and dropped fields that were never read (`paths`, top-level `exclude`, `languages`, `architecture.rules`, `snapshots.retention`).
+- Documented the previously missing `appmap` and `diagram` CLI commands and the `flow_refactor_plan` MCP tool, and added an "Available Tools" reference to the MCP page.
+- Added a documentation-coherence test gate that fails CI when the config schema, CLI command list, or MCP tool list drift from the code.
+- Removed the orphaned documentation validator (`DocumentationValidator`, `DocumentationUpdater`, `ValidateDocsCommand`, and supporting types) — unreachable and now superseded by the coherence gate. This also retires the 0.1.2 `DocumentationUpdater` exception fix, since the class is removed entirely.
+
 ## 0.1.2 - Guardrail fixes
 
 - `DocumentationUpdater` now throws a clear exception for a missing or unreadable docs file instead of emitting a PHP warning.
