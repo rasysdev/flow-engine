@@ -30,7 +30,7 @@ a local baseline, or integration with AI tooling.
 - `metrics <path>`: coupling, fan-in, fan-out, and hotspots.
 - `complexity <path>`: complexity findings.
 - `cycles <path>`: dependency cycles.
-- `architecture <path>`: architecture rule violations.
+- `architecture <path>`: layer classification and cross-layer dependency findings.
 - `orphans <path> [--audit]`: orphan candidates and evidence.
 - `bugs <path> [--min-score=N] [--type=TYPE]`: static bug patterns.
 - `solid <path>`: SOLID findings.
@@ -69,6 +69,15 @@ a local baseline, or integration with AI tooling.
 When no LLM provider is configured, `refactor-plan` still creates a deterministic
 local safety step from graph analysis so `refactor-execute` and
 `refactor-validate` remain usable. Optional LLM providers only enrich the plan.
+
+## Diagrams And Maps
+
+- `diagram <path> --view=class|component|c4context`: generate Mermaid diagram source for one project.
+- `diagram <path> --view=flowchart --entrypoint=<Class::method>`: generate entry-point flowchart (requires `--entrypoint`).
+- `appmap <service-a> <service-b> ...`: build an application map across multiple project paths.
+- `appmap --catalog=flow-services.json`: build the application map from a service catalog.
+
+See [System diagrams](system-diagrams.md) for diagram views, multi-project maps, and catalog usage.
 
 ## Snapshots And Gates
 
@@ -114,3 +123,9 @@ Most analysis commands print JSON or structured text to stdout. You can redirect
 php bin/engine.php context <path> --minimal > flow-context.md
 php bin/engine.php diagram <path> --view=class > class-diagram.md
 ```
+
+## Other Commands
+
+- `help`: list available commands.
+
+The router also registers commands meant for interactive or experimental use — `interactive` (guided menu), `compare`, `simulate`, and `appmap-diff`. They are not part of this stable reference yet and may change.

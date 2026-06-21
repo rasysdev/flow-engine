@@ -1,6 +1,6 @@
 # Configuration
 
-Flow Engine reads `flow-engine.json` from the project being analyzed. This file tells the engine what to scan, what to ignore, and which architecture rules should be checked.
+Flow Engine reads `flow-engine.json` from the project being analyzed. This file tells the engine what to scan, how to resolve symbols, and how your code maps to architectural layers.
 
 Create one on Windows PowerShell:
 
@@ -14,52 +14,60 @@ Create one on Linux/macOS:
 php bin/engine.php init /home/me/my-app
 ```
 
-Common fields:
+`init` writes a minimal, valid file for the detected project type (Composer or Flutter).
+
+## Minimal File
+
+Three fields are required: `version`, `context.type`, and `scan.include`. A typical PHP project looks like this:
 
 ```json
 {
-  "paths": ["src"],
-  "exclude": ["vendor", "node_modules", ".git"],
-  "languages": ["php", "typescript", "javascript", "python", "go", "dart", "blade"],
-  "architecture": {
-    "layers": {
-      "Domain": "src/Domain",
-      "Application": "src/Application",
-      "Infrastructure": "src/Infrastructure"
-    },
-    "rules": [
-      { "from": "Domain", "notTo": ["Infrastructure"] }
-    ]
+  "version": "1.0",
+  "context": {
+    "type": "composer",
+    "autoload": "vendor/autoload.php"
   },
-  "snapshots": {
-    "retention": 20
+  "scan": {
+    "include": ["src"],
+    "exclude": ["vendor", "tests"],
+    "extensions": ["php"]
   }
 }
 ```
 
 ## Fields
 
-- `paths`: directories to scan inside the analyzed project.
-- `exclude`: directories or files to ignore.
-- `languages`: language parsers to enable.
-- `architecture.layers`: named areas in your codebase.
-- `architecture.rules`: allowed or forbidden dependencies between layers.
-- `snapshots.retention`: how many local snapshots to keep by default.
+### Required
 
-## Architecture Rules
+- `version`: configuration schema version. Must be `"1.0"`.
+- `context.type`: project context. Use `composer` for PHP projects or `flutter` for Flutter/Dart projects.
+- `scan.include`: directories to scan inside the analyzed project.
 
-Use architecture rules to catch dependencies that should not exist. For example, this rule keeps domain code from depending on infrastructure code:
+### Optional
+
+- `context.autoload`: path to a Composer autoloader, for example `vendor/autoload.php`. Use `null` when there is none.
+- `scan.exclude`: directories or files to ignore. Default: none for Composer projects; Flutter projects (`context.type: flutter`) fall back to Flutter-specific exclusions (`.dart_tool`, `.pub-cache`, `build`, ...).
+- `scan.extensions`: file extensions to parse (not language names). Default: `["php"]` for Composer projects; Flutter projects default to `["dart"]`, plus `"py"` when a `backend/app` directory exists.
+- `architecture.layers`: named layers mapped to namespace prefixes (see below).
+- `snapshots.keep`: maximum number of labeled snapshots to keep (integer, minimum 1). Omit for unlimited.
+- `nodes.visibility`: node visibility policy, with `default` (`public` or `hidden`) and `rules` (`[{ "match": "...", "visibility": "..." }]`).
+- `entrypoints.patterns`: extra class or method name patterns that should never be reported as orphans.
+
+## Architecture Layers
+
+`architecture.layers` maps a layer name to one or more **namespace prefixes**. Flow Engine uses it to classify nodes into layers and report dependencies that cross layer boundaries.
 
 ```json
 {
+  "version": "1.0",
+  "context": { "type": "composer", "autoload": "vendor/autoload.php" },
+  "scan": { "include": ["src"], "exclude": ["vendor", "tests"], "extensions": ["php"] },
   "architecture": {
     "layers": {
-      "Domain": "src/Domain",
-      "Infrastructure": "src/Infrastructure"
-    },
-    "rules": [
-      { "from": "Domain", "notTo": ["Infrastructure"] }
-    ]
+      "Domain": ["App\\Domain\\"],
+      "Application": ["App\\Application\\"],
+      "Infrastructure": ["App\\Infrastructure\\"]
+    }
   }
 }
 ```
@@ -68,7 +76,10 @@ Then run:
 
 ```bash
 php bin/engine.php architecture <project>
+php bin/engine.php architecture-gate <project> --fail-on=any
 ```
+
+`architecture` reports how nodes are distributed across the configured layers and which dependencies cross between them. `architecture-gate` turns that into a CI-friendly pass/fail check.
 
 ## Secrets
 
