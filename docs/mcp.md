@@ -39,12 +39,28 @@ The repository includes `.mcp.json`:
 }
 ```
 
+## Available Tools
+
+| Tool | Purpose |
+| --- | --- |
+| `flow_map` | Structural map of the project: areas, entrypoints, languages. |
+| `flow_find` | Find nodes by name substring when the exact ID is unknown. |
+| `flow_lookup` | Focused details for a node, area, or entrypoint. |
+| `flow_context` | Compact, AI-ready context for the project or an area. |
+| `flow_impact` | Change impact (affected nodes) for a target node. |
+| `flow_risk` | Deterministic risk score for a target node. |
+| `flow_refactor_plan` | Graph-backed refactor plan for a target node. |
+| `flow_infra_map` | Infrastructure map for Docker, scripts, and config-heavy repositories. |
+
+All tools are local and read-only.
+
 ## Recommended AI Workflow
 
 1. Call `flow_map` to understand project shape.
 2. Call `flow_find` when the exact node ID is unknown.
 3. Call `flow_lookup` for focused context.
 4. Call `flow_context`, `flow_impact`, or `flow_risk` for targeted analysis.
+5. Call `flow_refactor_plan` for a graph-backed refactor plan, and `flow_infra_map` for Docker, script, or config-heavy repositories.
 
 ## Example System Prompt
 
