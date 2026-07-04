@@ -39,6 +39,43 @@ The repository includes `.mcp.json`:
 }
 ```
 
+## Claude Code Permissions
+
+Every Flow Engine MCP tool is read-only, so you may prefer to pre-approve the
+whole server instead of confirming each call.
+
+In Claude Code, add a server-level allow rule to the project's
+`.claude/settings.json`, or to `~/.claude/settings.json` to apply it to every
+project:
+
+```json
+{
+  "permissions": {
+    "allow": ["mcp__flow-engine"]
+  }
+}
+```
+
+The rule `mcp__flow-engine` matches all tools from the server;
+`mcp__flow-engine__*` is an equivalent wildcard form. To allow a single tool
+instead, use the full tool name, for example `mcp__flow-engine__flow_map`.
+See the [Claude Code permissions reference](https://code.claude.com/docs/en/permissions#mcp)
+for the rule syntax.
+
+Note that the tools accept arbitrary local paths in their `project` argument,
+not just the current repository. A user-wide allow rule therefore lets any
+Claude Code session analyze any readable source tree without a prompt. If you
+work with untrusted repositories, prefer the per-project rule.
+
+Known limitation: subagents spawned through the Agent/Task tool do not honor
+these allow rules and still prompt for each MCP call (see
+[anthropics/claude-code#5465](https://github.com/anthropics/claude-code/issues/5465)
+and
+[anthropics/claude-code#14714](https://github.com/anthropics/claude-code/issues/14714)).
+Until that is fixed upstream, either accept the prompts for subagent calls or
+have the main agent call the Flow Engine tools and pass the results to
+subagents in their prompts.
+
 ## Recommended AI Workflow
 
 1. Call `flow_map` to understand project shape.
