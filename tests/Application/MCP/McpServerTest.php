@@ -74,6 +74,27 @@ class McpServerTest extends TestCase
         $this->assertCount(8, $tools);
     }
 
+    public function test_tools_list_declares_read_only_annotations_on_every_tool(): void
+    {
+        $response = $this->server->dispatch([
+            'jsonrpc' => '2.0',
+            'id'      => 2,
+            'method'  => 'tools/list',
+        ]);
+
+        $this->assertNotNull($response);
+        $tools = $response['result']['tools'];
+
+        foreach ($tools as $tool) {
+            $this->assertArrayHasKey('annotations', $tool, "Tool '{$tool['name']}' must declare annotations");
+            $annotations = $tool['annotations'];
+            $this->assertTrue($annotations['readOnlyHint'], "Tool '{$tool['name']}' must declare readOnlyHint=true");
+            $this->assertFalse($annotations['destructiveHint'], "Tool '{$tool['name']}' must declare destructiveHint=false");
+            $this->assertTrue($annotations['idempotentHint'], "Tool '{$tool['name']}' must declare idempotentHint=true");
+            $this->assertFalse($annotations['openWorldHint'], "Tool '{$tool['name']}' must declare openWorldHint=false");
+        }
+    }
+
     public function test_tools_list_old_tools_still_require_project_in_schema(): void
     {
         $response = $this->server->dispatch([

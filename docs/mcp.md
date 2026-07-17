@@ -54,6 +54,20 @@ The repository includes `.mcp.json`:
 
 All tools are local and read-only.
 
+## Tool Annotations
+
+Every tool declares the standard [MCP tool annotations](https://modelcontextprotocol.io/specification/2025-03-26/server/tools#tool-annotations)
+in `tools/list`: `readOnlyHint: true`, `destructiveHint: false`,
+`idempotentHint: true`, `openWorldHint: false`. The engine analyzes code
+without mutating the target project, so clients can rely on these hints for
+permission decisions.
+
+This matters in Claude Code plan mode: MCP tools that do not declare
+`readOnlyHint` are hard-blocked there ("Cannot call ... while in plan mode"),
+even when a `permissions.allow` rule matches the tool. With the annotations in
+place, plan mode falls back to the regular permission flow, where a
+server-level allow rule such as `mcp__flow-engine` removes the prompts.
+
 ## Recommended AI Workflow
 
 1. Call `flow_map` to understand project shape.
