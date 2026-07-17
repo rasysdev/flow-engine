@@ -145,6 +145,7 @@ final class McpServer
                 'name'        => $t->name,
                 'description' => $t->description,
                 'inputSchema' => $t->inputSchema,
+                'annotations' => $t->annotations,
             ],
             $this->tools
         );
