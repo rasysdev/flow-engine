@@ -67,14 +67,23 @@ not just the current repository. A user-wide allow rule therefore lets any
 Claude Code session analyze any readable source tree without a prompt. If you
 work with untrusted repositories, prefer the per-project rule.
 
-Known limitation: subagents spawned through the Agent/Task tool do not honor
-these allow rules and still prompt for each MCP call (see
-[anthropics/claude-code#5465](https://github.com/anthropics/claude-code/issues/5465)
-and
-[anthropics/claude-code#14714](https://github.com/anthropics/claude-code/issues/14714)).
-Until that is fixed upstream, either accept the prompts for subagent calls or
-have the main agent call the Flow Engine tools and pass the results to
-subagents in their prompts.
+Known limitation: Claude Code plan mode hard-blocks MCP tools that do not
+declare `readOnlyHint` in their `tools/list` annotations ("Cannot call ...
+while in plan mode"), even when an allow rule matches, and this also applies
+to subagents spawned from a plan mode session. Flow Engine releases that
+include [#7](https://github.com/rborges/flow-engine/pull/7) declare the
+read-only annotations on every tool, so plan mode falls back to the regular
+permission flow and the allow rules above apply — verified on Claude Code
+2.1.212 for the main agent and for Agent/Task subagents in both normal and
+plan mode. On older Flow Engine releases, interactive plan mode escalates each
+call to a manual approval prompt, and non-interactive (`-p`) runs deny it
+outright; approve each call, run the tools outside plan mode, or upgrade.
+Older Claude Code versions also had reports of subagents not
+inheriting allow rules at all
+([anthropics/claude-code#5465](https://github.com/anthropics/claude-code/issues/5465),
+[anthropics/claude-code#14714](https://github.com/anthropics/claude-code/issues/14714));
+if subagent calls still prompt for you, update Claude Code before changing
+permission rules.
 
 ## Recommended AI Workflow
 
